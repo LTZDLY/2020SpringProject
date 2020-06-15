@@ -10,6 +10,8 @@
 #ifndef __BULLET_H__
 #define __BULLET_H__
 
+#define BULLET (10);
+
 #include "cocos2d.h"
 
 //简单子弹

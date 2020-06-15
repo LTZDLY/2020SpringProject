@@ -45,24 +45,25 @@ void Bullet::DoDefaultAction()
 	}
 	auto a = cocos2d::CallFunc::create([=]() 
 	{
-		timer++;
 		auto now = this->getPosition();
 		auto to = now;
 		to.x += this->v.x;
 		to.y += this->v.y;
 		auto move = cocos2d::MoveTo::create((1.0 / 30.0), to);
 		this->runAction(cocos2d::Sequence::create(move, nullptr));
-		if (this->navi == true) 
+		if (this->navi == true)
 		{
-			auto ang = atan(this->v.y / this->v.x) / acos(-1.0) * 180;
-			auto rota = cocos2d::RotateTo::create((0.0), -ang);
-			this->runAction(cocos2d::Sequence::create(rota, nullptr));
+			if (this->v.x != 0 || this->v.y != 0) 
+			{
+				auto ang = atan(this->v.y / this->v.x) / acos(-1.0) * 180;
+				auto rota = cocos2d::RotateTo::create((0.0), -ang);
+				this->runAction(cocos2d::Sequence::create(rota, nullptr));
+			}
 		}
 		else if (this->rotvelocity != 0) 
 		{
 			this->rot += this->rotvelocity;
-			auto ang = this->rot;
-			auto rota = cocos2d::RotateTo::create((0.0), -ang);
+			auto rota = cocos2d::RotateBy::create((0.0), -this->rotvelocity);
 			this->runAction(cocos2d::Sequence::create(rota, nullptr));
 		}
 		if (this->a != 0) 
@@ -75,8 +76,13 @@ void Bullet::DoDefaultAction()
 		removeself
 		*/
 	});
+	auto b = cocos2d::CallFunc::create([=]() {
+		this->timer++;
+	});
 	auto delay = cocos2d::DelayTime::create((1.0 / 30.0));
-	this->runAction(cocos2d::RepeatForever::create(static_cast<cocos2d::Sequence *>(cocos2d::Sequence::create(a, delay, nullptr))));
+	auto delay_b = cocos2d::DelayTime::create((1.0 / 60.0));
+	this->runAction(cocos2d::RepeatForever::create(static_cast<cocos2d::Spawn *>(cocos2d::Spawn::create(a, delay, nullptr))));
+	this->runAction(cocos2d::RepeatForever::create(static_cast<cocos2d::Spawn *>(cocos2d::Spawn::create(b, delay_b, nullptr))));
 }
 void Bullet::setVelocit(float v) 
 {
@@ -91,7 +97,8 @@ void Bullet::setAngle(float r)
 }
 void Bullet::setRot(float r) 
 {
-	r = r * PI / 180;
+	auto rota = cocos2d::RotateTo::create((0.0), -r);
+	this->runAction(cocos2d::Sequence::create(rota, nullptr));
 	this->rot = r;
 }
 void Bullet::setRotVelocity(float rv) 
@@ -178,4 +185,10 @@ void jiaocha::DoOnCreate(float v, float r, int a)
 void jiaocha::DoOnFrame()
 {
 	this->DoDefaultAction();
+	auto repeat = cocos2d::CallFunc::create([=]() {
+		auto aa = cocos2d::RemoveSelf::create();
+		if (this->timer == 240) this->runAction(aa);
+	});
+	auto delay = cocos2d::DelayTime::create((1.0 / 60.0));
+	this->runAction(cocos2d::RepeatForever::create(static_cast<cocos2d::Spawn *>(cocos2d::Spawn::create(repeat, delay, nullptr))));
 }

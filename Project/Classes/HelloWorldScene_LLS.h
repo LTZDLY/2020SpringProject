@@ -26,16 +26,22 @@
 #define __HELLOWORLD_SCENE_H__
 
 #include "cocos2d.h"
+#include "Player.h"
 
 class HelloWorld : public cocos2d::Scene
 {
 private:
-	cocos2d::Sprite* _player;
+	Player* _player;
 	cocos2d::Sprite* _enemy;
+	cocos2d::Vector<cocos2d::SpriteFrame*> getAnimation(const char* format, int count);
 public:
     static cocos2d::Scene* createScene();
 
     virtual bool init();
+	virtual void onKeyPressed(cocos2d::EventKeyboard::KeyCode code, cocos2d::Event* event);
+	virtual void onKeyReleased(cocos2d::EventKeyboard::KeyCode code, cocos2d::Event* event);
+	void addKeyboardListener();
+	void addContactListener();
     
     // a selector callback
     void menuCloseCallback(cocos2d::Ref* pSender);
@@ -43,8 +49,10 @@ public:
     // implement the "static create()" method manually
     CREATE_FUNC(HelloWorld);
 	void HelloWorld::addMonster(float dt);
-	void HelloWorld::addbullet(float dt);
+	void HelloWorld::addbullet(float dt); 
+	void HelloWorld::addPlayer(float dt);
 	bool onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* unused_event);
+	bool onConcactBegin(cocos2d::PhysicsContact & contact);
 	bool HelloWorld::onContactBegin(cocos2d::PhysicsContact& contact);
 	float temp;
 	float temp2;
@@ -58,4 +66,9 @@ class MyEnemy : public cocos2d::Sprite {
 };
 //样例代码，并未测试过有效性
 */
+
+
+
 #endif // __HELLOWORLD_SCENE_H__
+
+

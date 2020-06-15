@@ -24,8 +24,22 @@
 
 #include "HelloWorldScene.h"
 #include "Bullet.h"
+#include "Player.h"
 
 USING_NS_CC;
+
+cocos2d::Vector<cocos2d::SpriteFrame*> HelloWorld::getAnimation(const char * format, int count)
+{
+	auto spritecache = SpriteFrameCache::getInstance();
+	Vector<SpriteFrame*> animFrames;
+	char str[100];
+	for (int i = 1; i <= count; i++)
+	{
+		sprintf(str, format, i);
+		animFrames.pushBack(spritecache->getSpriteFrameByName(str));
+	}
+	return animFrames;
+}
 
 Scene* HelloWorld::createScene()
 {
@@ -73,17 +87,12 @@ void HelloWorld::addbullet(float dt) {
 void HelloWorld::addMonster(float dt) {
 	// Add monster
 
-	auto winSize = Director::getInstance()->getVisibleSize();
-
-	auto _enemy = Sprite::create("Monster.png");
-	_enemy->setPosition(Vec2(winSize.width * 0.8, winSize.height * 0.5));
-	this->addChild(_enemy);
-
+	/*
 	auto physicsBody = PhysicsBody::createBox(_enemy->getContentSize(), PhysicsMaterial(0.0f, 0.0f, 0.0f));
 	physicsBody->setDynamic(false);
 	physicsBody->setContactTestBitmask(0xFFFFFFFF);
 	_enemy->setPhysicsBody(physicsBody);
-	
+	*/
 	/*
 	//测试使用callfunc执行发弹动作，成功
 	//测试task套循环，成功
@@ -119,29 +128,39 @@ void HelloWorld::addMonster(float dt) {
 	//以上为第一次试验代码，请勿作为将来写代码的参考
 	*/
 
-	/*
+	
 	//测试简单子弹和高光效果，成功
 	auto shootStar = CallFunc::create([=]() {
-		Bullet *dankumu = Bullet::create("bigball_dark.png");
-		dankumu->setPosition(_enemy->getPosition());
+		Bullet *dankumu = Bullet::create("bullet5.png");
+
+		auto physicsBody = PhysicsBody::createCircle(1.0f, PhysicsMaterial(1.0f, 0.0f, 0.0f));
+		physicsBody->setDynamic(false);
+		physicsBody->setContactTestBitmask(0xFFFFFFFF);
+		dankumu->setTag(10);
+		dankumu->setPhysicsBody(physicsBody);
+		//屏幕右下角坐标(26.5,0)
+		dankumu->setPosition(Vec2(100,100));
 		dankumu->setAngle(120);
-		dankumu->setVelocit(5);
-		dankumu->setRotVelocity(10);
-		dankumu->setAcceleration(0.1);
+		dankumu->setVelocit(0);
+		dankumu->setRot(0);
+		//dankumu->setRotVelocity(10);
+		dankumu->setAcceleration(0);
 		dankumu->setAccAngle(-90);
 		dankumu->DoOnFrame();
-		this->addChild(dankumu);
+		this->addChild(dankumu,10);
 		BlendFunc cbl = { backend::BlendFactor::DST_COLOR,backend::BlendFactor::ONE };
 		dankumu->setBlendFunc(cbl);
 	});
-	auto delay = cocos2d::DelayTime::create(0.5);
-	_enemy->runAction(RepeatForever::create(static_cast<Spawn *>(Spawn::create(shootStar, delay, nullptr))));
+	auto delay = cocos2d::DelayTime::create(0.3);
+	_enemy->runAction(Repeat::create(static_cast<Spawn *>(Spawn::create(shootStar, delay, nullptr)), 1));
 	//简单子弹的调用如上所示
-	*/
+	
 
 	/*
 	//测试lstg中的task嵌套效果，未完成
 	//测试自定义子弹和task套循环，成功
+	temp = 180;
+	temp2 = 0;
 	auto shootStar2 = CallFunc::create([=]() {
 		auto shootStar = CallFunc::create([=]() {
 			jiaocha* dankumu = jiaocha::create("grain.png");
@@ -172,6 +191,28 @@ void HelloWorld::addMonster(float dt) {
 }
 
 // on "init" you need to initialize your instance
+
+void HelloWorld::addPlayer(float dt) {
+	auto winSize = Director::getInstance()->getVisibleSize();
+	auto origin = Director::getInstance()->getVisibleOrigin();
+	_player = _player->create("player.png");
+	_player->setPosition(Vec2(150,150));
+
+	auto playbody = PhysicsBody::createCircle(1.5f, PhysicsMaterial(1.0f, 0.0f, 0.0f));
+	playbody->setContactTestBitmask(0x00F0);
+	playbody->setCollisionBitmask(0x0000);
+	playbody->setCategoryBitmask(0x000F);
+	playbody->setTag(2);
+	playbody->setDynamic(true);
+	playbody->setGravityEnable(false);
+	_player->setPhysicsBody(playbody);
+
+	this->addChild(_player,5);
+	this->addChild(_player->pdd.pdd1,100);
+	this->addChild(_player->pdd.pdd2,100);
+	_player->DoOnFrame();
+}
+
 bool HelloWorld::init()
 {
     //////////////////////////////
@@ -194,13 +235,39 @@ bool HelloWorld::init()
 	background->drawSolidRect(origin, winSize, cocos2d::Color4F(0.6, 0.6, 0.6, 1.0));
 	this->addChild(background); 
 	
-	_player = Sprite::create("player.png");
-	_player->setPosition(Vec2(winSize.width * 0.1, winSize.height * 0.5)); 
-	this->addChild(_player);
+	addKeyboardListener();
+	addContactListener();
+
+	this->scheduleOnce(CC_SCHEDULE_SELECTOR(HelloWorld::addPlayer), 0);
 
 	// 初始化了随机数生成器。如果不执行这一步，每次运行程序都会产生一样的随机数。
 	srand((unsigned)time(nullptr));
 	//生成一个怪物
+
+	auto a = SpriteFrameCache::getInstance();
+	a->addSpriteFramesWithFile("test.plist");
+	//auto frames = getAnimation("enemy-test/%d.png", 12);
+	_enemy = Sprite::createWithSpriteFrameName("enemy-test/0.png");
+
+	Vector<SpriteFrame*> mSprite;
+	SpriteFrame* frame = nullptr;
+	char str[100] = { 0 };
+	for (int i = 0; i < 4; i++) {
+		sprintf(str, "enemy-test/%d.png", i);
+		frame = a->getSpriteFrameByName(str);
+		mSprite.pushBack(frame);
+	}
+	auto aaa = Animation::createWithSpriteFrames(mSprite, 1.0 / 10.0);
+	aaa->setLoops(-1);
+	aaa->setRestoreOriginalFrame(true);
+	auto bbb = Animate::create(aaa);
+	_enemy->runAction(bbb);
+	
+
+	_enemy->setPosition(Vec2(winSize.width * 0.8, winSize.height * 0.5));
+	this->addChild(_enemy);
+
+
 	this->scheduleOnce(CC_SCHEDULE_SELECTOR(HelloWorld::addMonster), 0);
 	/*
 	_enemy = Sprite::create("Monster.png");
@@ -211,7 +278,7 @@ bool HelloWorld::init()
 	_enemy->setPhysicsBody(physicsBody);
 	this->addChild(_enemy);
 	*/
-
+	/*
 	//this->scheduleOnce(CC_SCHEDULE_SELECTOR(HelloWorld::addMonster), 0);
 	auto eventListener = EventListenerTouchOneByOne::create();
 	// 定义回调函数onTouchBegan():手指第一次碰到屏幕时被调用。
@@ -222,7 +289,7 @@ bool HelloWorld::init()
 	auto contactListener = EventListenerPhysicsContact::create();
 	contactListener->onContactBegin = CC_CALLBACK_1(HelloWorld::onContactBegin, this);
 	_eventDispatcher->addEventListenerWithSceneGraphPriority(contactListener, this);
-
+	*/
     return true;
 }
 
@@ -295,6 +362,77 @@ void HelloWorld::menuCloseCallback(Ref* pSender)
     //_eventDispatcher->dispatchEvent(&customEndEvent);
 
 
+}
+
+
+void HelloWorld::addKeyboardListener() {
+	auto* listener = EventListenerKeyboard::create();
+	listener->onKeyPressed = CC_CALLBACK_2(HelloWorld::onKeyPressed, this);
+	listener->onKeyReleased = CC_CALLBACK_2(HelloWorld::onKeyReleased, this);
+
+	_eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
+
+}
+void HelloWorld::onKeyPressed(cocos2d::EventKeyboard::KeyCode code, Event* event) {
+	switch (code) {
+	case EventKeyboard::KeyCode::KEY_SHIFT:
+		_player->shift = true;
+		break;
+	case EventKeyboard::KeyCode::KEY_LEFT_ARROW:
+		_player->keyboardnum += 1;
+		break;
+	case EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
+		_player->keyboardnum += 2;
+		break;
+	case EventKeyboard::KeyCode::KEY_UP_ARROW:
+		_player->keyboardnum += 4;
+		break;
+	case EventKeyboard::KeyCode::KEY_DOWN_ARROW:
+		_player->keyboardnum += 8;
+		break;
+	}
+}
+
+void HelloWorld::onKeyReleased(cocos2d::EventKeyboard::KeyCode code, Event* event) {
+	switch (code) {
+	case EventKeyboard::KeyCode::KEY_SHIFT:
+		_player->shift = false;
+		break;
+	case EventKeyboard::KeyCode::KEY_LEFT_ARROW:
+		_player->keyboardnum -= 1;
+		break;
+	case EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
+		_player->keyboardnum -= 2;
+		break;
+	case EventKeyboard::KeyCode::KEY_UP_ARROW:
+		_player->keyboardnum -= 4;
+		break;
+	case EventKeyboard::KeyCode::KEY_DOWN_ARROW:
+		_player->keyboardnum -= 8;
+		break;
+	}
+}
+
+void HelloWorld::addContactListener() {
+	auto contactListener = EventListenerPhysicsContact::create();
+	contactListener->onContactBegin = CC_CALLBACK_1(HelloWorld::onConcactBegin, this);
+	//contactListener->onContactPreSolve = CC_CALLBACK_1(HitBrick::onContactPreSolve, this);
+	_eventDispatcher->addEventListenerWithSceneGraphPriority(contactListener, this);
+}
+
+
+bool HelloWorld::onConcactBegin(PhysicsContact & contact) {
+	auto nodeA = contact.getShapeA()->getBody()->getNode();
+	auto nodeB = contact.getShapeB()->getBody()->getNode();
+	if (nodeA->getTag() == nodeB->getTag()) return true;
+	static int i = 0;
+	std::stringstream ss;
+	ss << "biu" << i;
+	std::string s = ss.str();
+	char* chr = const_cast<char*>(s.c_str());
+	CCLOG(chr);
+	i++;
+	return true;
 }
 
 /*
