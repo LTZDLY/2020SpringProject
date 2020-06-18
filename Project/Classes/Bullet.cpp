@@ -22,7 +22,9 @@ Bullet* Bullet::create(const char *filename)
 	CC_SAFE_DELETE(sprite);
 	return nullptr;
 }
-void Bullet::DoOnCreate() {}
+void Bullet::DoOnCreate() {
+	this->setTag(GROUP_ENEMY_BULLET);
+}
 void Bullet::DoOnFrame()
 {
 	Bullet::DoDefaultAction();
@@ -114,6 +116,13 @@ void Bullet::setAccAngle(float r)
 	r = r * PI / 180;
 	this->ar = r;
 }
+
+void Bullet::setDmg(float d)
+{
+	this->dmg = d;
+}
+
+float Bullet::getDmg(float) { return dmg; }
 
 /*简单子弹组
 void CreateBullets(const char *pszFileName, cocos2d::Sprite* _enemy, cocos2d::Scene* a, int num, float interval, float velocity_begin, float velocity_end, float angle, float angle_spread, bool aim) {

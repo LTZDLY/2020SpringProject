@@ -28,6 +28,8 @@
 
 USING_NS_CC;
 
+template <typename T> std::string tostr(const T& t) { std::ostringstream os; os << t; return os.str(); }
+
 cocos2d::Vector<cocos2d::SpriteFrame*> HelloWorld::getAnimation(const char * format, int count)
 {
 	auto spritecache = SpriteFrameCache::getInstance();
@@ -131,15 +133,17 @@ void HelloWorld::addMonster(float dt) {
 	
 	//测试简单子弹和高光效果，成功
 	auto shootStar = CallFunc::create([=]() {
-		Bullet *dankumu = Bullet::create("bullet5.png");
+		Bullet *dankumu = Bullet::create("grain.png");
+		Bullet *dankumu2 = Bullet::create("grain.png");
 
 		auto physicsBody = PhysicsBody::createCircle(1.0f, PhysicsMaterial(1.0f, 0.0f, 0.0f));
 		physicsBody->setDynamic(false);
 		physicsBody->setContactTestBitmask(0xFFFFFFFF);
-		dankumu->setTag(10);
 		dankumu->setPhysicsBody(physicsBody);
+		dankumu->setTag(GROUP_ENEMY_BULLET);
 		//屏幕右下角坐标(26.5,0)
-		dankumu->setPosition(Vec2(100,100));
+		dankumu->setPosition(Vec2(26.5,0));
+		dankumu2->setPosition(Vec2(26.5 + 640.0 / 1.5, 480.0 / 1.5));
 		dankumu->setAngle(120);
 		dankumu->setVelocit(0);
 		dankumu->setRot(0);
@@ -147,9 +151,11 @@ void HelloWorld::addMonster(float dt) {
 		dankumu->setAcceleration(0);
 		dankumu->setAccAngle(-90);
 		dankumu->DoOnFrame();
-		this->addChild(dankumu,10);
+		dankumu2->DoOnFrame();
+		this->addChild(dankumu, GROUP_ENEMY_BULLET);
+		this->addChild(dankumu2, GROUP_ENEMY_BULLET);
 		BlendFunc cbl = { backend::BlendFactor::DST_COLOR,backend::BlendFactor::ONE };
-		dankumu->setBlendFunc(cbl);
+		//dankumu->setBlendFunc(cbl);
 	});
 	auto delay = cocos2d::DelayTime::create(0.3);
 	_enemy->runAction(Repeat::create(static_cast<Spawn *>(Spawn::create(shootStar, delay, nullptr)), 1));
@@ -196,20 +202,20 @@ void HelloWorld::addPlayer(float dt) {
 	auto winSize = Director::getInstance()->getVisibleSize();
 	auto origin = Director::getInstance()->getVisibleOrigin();
 	_player = _player->create("player.png");
+	_player->DoOnCreate();
 	_player->setPosition(Vec2(150,150));
+	_player->Atk(this);
 
 	auto playbody = PhysicsBody::createCircle(1.5f, PhysicsMaterial(1.0f, 0.0f, 0.0f));
-	playbody->setContactTestBitmask(0x00F0);
-	playbody->setCollisionBitmask(0x0000);
-	playbody->setCategoryBitmask(0x000F);
-	playbody->setTag(2);
+	playbody->setContactTestBitmask(1);
+	playbody->setCollisionBitmask(1);
+	playbody->setCategoryBitmask(1);
+	playbody->setTag(GROUP_PLAYER);
 	playbody->setDynamic(true);
 	playbody->setGravityEnable(false);
 	_player->setPhysicsBody(playbody);
 
-	this->addChild(_player,5);
-	this->addChild(_player->pdd.pdd1,100);
-	this->addChild(_player->pdd.pdd2,100);
+	this->addChild(_player, GROUP_PLAYER);
 	_player->DoOnFrame();
 }
 
@@ -227,14 +233,26 @@ bool HelloWorld::init()
 	}
 	// My code here
 
+	auto s = Director::getInstance()->getWinSize();
 	auto winSize = Director::getInstance()->getVisibleSize();
 	auto origin = Director::getInstance()->getVisibleOrigin();
 
 	// set Background with grey colour
-	auto background = DrawNode::create();
-	background->drawSolidRect(origin, winSize, cocos2d::Color4F(0.6, 0.6, 0.6, 1.0));
-	this->addChild(background); 
+
+	_labelPosition = Label::createWithTTF("Mouse not supported on this device", "fonts/arial.ttf", 22);
+	_labelPosition->setPosition(Vec2(s.width / 2, s.height / 3));
+	addChild(_labelPosition,10000);
+
+
+	auto background1 = DrawNode::create();
+	background1->drawSolidRect(origin, winSize, cocos2d::Color4F(0, 0, 0, 1.0));
+	this->addChild(background1); 
 	
+	auto background = Sprite::create("ui_bg.png");
+	background->setScale(1.425f);
+	background->setPosition(Vec2((53.0 + 640.0 / 1.5) / 2.0, 160));
+	this->addChild(background, 2000);
+
 	addKeyboardListener();
 	addContactListener();
 
@@ -264,8 +282,18 @@ bool HelloWorld::init()
 	_enemy->runAction(bbb);
 	
 
+	auto enemybody = PhysicsBody::createCircle(7.0f, PhysicsMaterial(1.0f, 0.0f, 0.0f));
+	enemybody->setContactTestBitmask(1);
+	enemybody->setCollisionBitmask(1);
+	enemybody->setCategoryBitmask(1);
+	enemybody->setTag(GROUP_ENEMY);
+	enemybody->setDynamic(true);
+	enemybody->setGravityEnable(false);
+	_enemy->setPhysicsBody(enemybody);
+
 	_enemy->setPosition(Vec2(winSize.width * 0.8, winSize.height * 0.5));
-	this->addChild(_enemy);
+	this->addChild(_enemy, GROUP_ENEMY);
+	_enemy->setTag(GROUP_ENEMY);
 
 
 	this->scheduleOnce(CC_SCHEDULE_SELECTOR(HelloWorld::addMonster), 0);
@@ -294,60 +322,6 @@ bool HelloWorld::init()
 }
 
 bool HelloWorld::onTouchBegan(Touch* touch, Event* unused_event) {
-	// 1 - Just an example for how to get the player object
-	// 说明一下作为第二个参数传递给addEventListenerWithSceneGraphPriority(eventListener, _player)的_player对象被访问的方式。
-	// auto node = unused_event->getcurrentTarget();
-
-	// 2.获取触摸点的坐标，并计算这个点相对于_player的偏移量。
-	Vec2 touchLocation = touch->getLocation();
-	Vec2 offset = touchLocation - _player->getPosition();
-	// 如果offset的x值是负值，这表明玩家正试图朝后射击。在本游戏中这是不允许的。
-	if (offset.x < 0) {
-		return true;
-	}
-
-	// 3.在玩家所在的位置创建一个飞镖，将其添加到场景中。
-	auto projectile = Sprite::create("Projectile.png");
-	projectile->setPosition(_player->getPosition());
-	auto physicsBody = PhysicsBody::createBox(projectile->getContentSize(), PhysicsMaterial(0.0f, 0.0f, 0.0f));
-	physicsBody->setDynamic(false);
-	physicsBody->setContactTestBitmask(0xFFFFFFFF);
-	projectile->setPhysicsBody(physicsBody);
-	projectile->setTag(10);
-	this->addChild(projectile);
-
-	// 4.将偏移量转化为单位向量，即长度为1的向量。
-	offset.normalize();
-	// 将其乘以1000，你就获得了一个指向用户触屏方向的长度为1000的向量。为什么是1000呢？因为长度应当足以超过当前分辨率下屏幕的边界。
-	auto shootAmount = offset * 1000;
-	// 将此向量添加到飞镖的位置上去，这样你就有了一个目标位置。
-	auto realDest = shootAmount + projectile->getPosition();
-
-	// 5.创建一个动作，将飞镖在2秒内移动到目标位置，然后将它从场景中移除。
-	auto actionMove = MoveTo::create(2.0f, realDest);
-	auto actionRemove = RemoveSelf::create();
-	projectile->runAction(Sequence::create(actionMove, actionRemove, nullptr));
-
-	return true;
-}
-
-bool HelloWorld::onContactBegin(cocos2d::PhysicsContact& contact)
-{
-	auto nodeA = contact.getShapeA()->getBody()->getNode();
-	auto nodeB = contact.getShapeB()->getBody()->getNode();
-
-	if (nodeA && nodeB)
-	{
-		if (nodeA->getTag() == 10)
-		{
-			nodeB->removeFromParentAndCleanup(true);
-		}
-		else if (nodeB->getTag() == 10)
-		{
-			nodeA->removeFromParentAndCleanup(true);
-		}
-	}
-
 	return true;
 }
 
@@ -374,21 +348,28 @@ void HelloWorld::addKeyboardListener() {
 
 }
 void HelloWorld::onKeyPressed(cocos2d::EventKeyboard::KeyCode code, Event* event) {
+	std::string str = "MousePosition X:";
+	str = str + tostr(_player->getPositionX()) + " Y:" + tostr(_player->getPositionY());
+	_labelPosition->setString(str.c_str());
 	switch (code) {
 	case EventKeyboard::KeyCode::KEY_SHIFT:
-		_player->shift = true;
+		_player->info.shift = true;
+		break;
+	case EventKeyboard::KeyCode::KEY_Z:
+		_player->info.shoot = true;
+		CCLOG("you press z");
 		break;
 	case EventKeyboard::KeyCode::KEY_LEFT_ARROW:
-		_player->keyboardnum += 1;
+		_player->info.keyboardnum += 1;
 		break;
 	case EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
-		_player->keyboardnum += 2;
+		_player->info.keyboardnum += 2;
 		break;
 	case EventKeyboard::KeyCode::KEY_UP_ARROW:
-		_player->keyboardnum += 4;
+		_player->info.keyboardnum += 4;
 		break;
 	case EventKeyboard::KeyCode::KEY_DOWN_ARROW:
-		_player->keyboardnum += 8;
+		_player->info.keyboardnum += 8;
 		break;
 	}
 }
@@ -396,19 +377,22 @@ void HelloWorld::onKeyPressed(cocos2d::EventKeyboard::KeyCode code, Event* event
 void HelloWorld::onKeyReleased(cocos2d::EventKeyboard::KeyCode code, Event* event) {
 	switch (code) {
 	case EventKeyboard::KeyCode::KEY_SHIFT:
-		_player->shift = false;
+		_player->info.shift = false;
+		break;
+	case EventKeyboard::KeyCode::KEY_Z:
+		_player->info.shoot = false;
 		break;
 	case EventKeyboard::KeyCode::KEY_LEFT_ARROW:
-		_player->keyboardnum -= 1;
+		_player->info.keyboardnum -= 1;
 		break;
 	case EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
-		_player->keyboardnum -= 2;
+		_player->info.keyboardnum -= 2;
 		break;
 	case EventKeyboard::KeyCode::KEY_UP_ARROW:
-		_player->keyboardnum -= 4;
+		_player->info.keyboardnum -= 4;
 		break;
 	case EventKeyboard::KeyCode::KEY_DOWN_ARROW:
-		_player->keyboardnum -= 8;
+		_player->info.keyboardnum -= 8;
 		break;
 	}
 }
@@ -425,13 +409,31 @@ bool HelloWorld::onConcactBegin(PhysicsContact & contact) {
 	auto nodeA = contact.getShapeA()->getBody()->getNode();
 	auto nodeB = contact.getShapeB()->getBody()->getNode();
 	if (nodeA->getTag() == nodeB->getTag()) return true;
-	static int i = 0;
 	std::stringstream ss;
-	ss << "biu" << i;
-	std::string s = ss.str();
-	char* chr = const_cast<char*>(s.c_str());
-	CCLOG(chr);
-	i++;
+	std::string s;
+	switch (nodeA->getTag() + nodeB->getTag())
+	{
+	case GROUP_PLAYER + GROUP_ENEMY_BULLET:
+		nodeA->getTag() == GROUP_PLAYER ?
+			static_cast<Player*>(nodeA)->beHit(static_cast<Bullet*>(nodeB)) :
+			static_cast<Player*>(nodeB)->beHit(static_cast<Bullet*>(nodeA));
+		CCLOG("e_b删除，p掉血");
+		break;
+	case GROUP_PLAYER_BULLET + GROUP_ENEMY:
+		nodeA->getTag() == GROUP_PLAYER_BULLET ? 
+			static_cast<PCommonShot*>(nodeA)->Hit(static_cast<Sprite*>(nodeB)): 
+			static_cast<PCommonShot*>(nodeB)->Hit(static_cast<Sprite*>(nodeA));
+		CCLOG("p_b删除，e掉血");
+		break;
+	case GROUP_PLAYER + GROUP_ENEMY:
+		CCLOG("p掉血");
+		break;
+	case GROUP_PLAYER + GROUP_ITEM:
+		CCLOG("item删除");
+		break;
+	default:
+		break;
+	}
 	return true;
 }
 

@@ -22,53 +22,44 @@
  THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef __HELLOWORLD_SCENE_H__
-#define __HELLOWORLD_SCENE_H__
+#ifndef __STAGE1_H__
+#define __STAGE1_H__
 
 #include "cocos2d.h"
 #include "Player.h"
 
-class HelloWorld : public cocos2d::Scene
+class Stage : public cocos2d::Scene
 {
 private:
-	Player* _player;
-	cocos2d::Sprite* _enemy;
-	cocos2d::Vector<cocos2d::SpriteFrame*> getAnimation(const char* format, int count);
 public:
+	Player* _player;
     static cocos2d::Scene* createScene();
-
     virtual bool init();
 	virtual void onKeyPressed(cocos2d::EventKeyboard::KeyCode code, cocos2d::Event* event);
 	virtual void onKeyReleased(cocos2d::EventKeyboard::KeyCode code, cocos2d::Event* event);
 	void addKeyboardListener();
 	void addContactListener();
-    
-    // a selector callback
-    void menuCloseCallback(cocos2d::Ref* pSender);
-    
-    // implement the "static create()" method manually
-    CREATE_FUNC(HelloWorld);
-	void HelloWorld::addMonster(float dt);
-	void HelloWorld::addbullet(float dt); 
-	void HelloWorld::addPlayer(float dt);
+    CREATE_FUNC(Stage);
 	bool onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* unused_event);
 	bool onConcactBegin(cocos2d::PhysicsContact & contact);
-	float temp;
-	float temp2;
-	float temp3;
-	float temp4;
-	cocos2d::Label*   _labelPosition;
+protected:
 };
 
-/*
-class MyEnemy : public cocos2d::Sprite {
-	void MyEnemy::DoOnFrame();
+class StageOP : public Stage {
+public:
+	static cocos2d::Scene* createScene();
+	CREATE_FUNC(StageOP);
+	StageOP();
 };
-//样例代码，并未测试过有效性
-*/
+
+class Stage1 : public Stage {
+public:
+	static cocos2d::Scene* createScene();
+	CREATE_FUNC(Stage1);
+	Stage1();
+};
 
 
 
-#endif // __HELLOWORLD_SCENE_H__
 
-
+#endif // __STAGE1_H__

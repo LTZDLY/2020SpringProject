@@ -10,7 +10,8 @@
 #ifndef __BULLET_H__
 #define __BULLET_H__
 
-#define BULLET (10);
+#define GROUP_ENEMY_BULLET 256
+#define GROUP_ENEMY 16
 
 #include "cocos2d.h"
 
@@ -18,15 +19,23 @@
 class Bullet : public cocos2d::Sprite {
 public:
 	static Bullet* create(const char *pszFileName);
-	void Bullet::DoOnCreate();
-	void Bullet::DoOnFrame();
-	void Bullet::DoDefaultAction();
-	void Bullet::setVelocit(float);
-	void Bullet::setAngle(float);
-	void Bullet::setRot(float);
-	void Bullet::setRotVelocity(float);
-	void Bullet::setAcceleration(float);
-	void Bullet::setAccAngle(float);
+	void DoOnCreate();
+	void DoOnFrame();
+	void DoDefaultAction();
+	void setVelocit(float);
+	void setAngle(float);
+	void setRot(float);
+	void setRotVelocity(float);
+	void setAcceleration(float);
+	void setAccAngle(float);
+	void setDmg(float);
+	float getDmg(float);
+	bool aim = false;//是否对着自机
+	bool navi = true;//是否保持朝向与角度一致
+	bool rebound = false;//是否反弹
+	bool shuttle = false;//是否穿板
+	bool bound = true;//是否出屏消弹
+	bool destroyable = true;//是否可被摧毁
 protected:
 	//子弹速度决定于分速度，与velocity的值无直接关系
 	cocos2d::Vec2 v;//子弹在x轴方向和y轴方向上的分速度
@@ -37,14 +46,9 @@ protected:
 	float a = 0;//子弹加速度
 	float ar = 0;//子弹加速度的角度，单位：角度
 	int timer = 0;//子弹的内置计时器
-	bool aim = false;//是否对着自机
-	bool navi = true;//是否保持朝向与角度一致
-	bool rebound = false;//是否反弹
-	bool shuttle = false;//是否穿板
-	bool bound = true;//是否出屏消弹
-	bool destroyable = true;//是否可被摧毁
 	float temp1 = 0;
 	float temp2 = 0;
+	float dmg = 0;//子弹伤害
 };//By LLS
 
 //子弹组尝试
@@ -67,8 +71,8 @@ public:
 class jiaocha :public Bullet {
 public:
 	static jiaocha* create(const char *pszFileName);
-	void jiaocha::DoOnCreate(float, float, int);
-	void jiaocha::DoOnFrame();
+	void DoOnCreate(float, float, int);
+	void DoOnFrame();
 	int temp3 = 0;
 };//By LLS
 
