@@ -1,8 +1,8 @@
-/*
-	ÕâÊÇÒ»¸öÔÝÊ±Òì³£¼òÂªµÄ¹ÖÎïÀà
-	×Ô¶¨ÒåµÐÈË¼Ì³Ð×ÔEnemy
-	×¢ÒâÖØÔØDoOnCreated DoOnFrame
-	pwq from ddlÇ°µÄpfr
+ï»¿/*
+	è¿™æ˜¯ä¸€ä¸ªç»è¿‡ä¸€å®šåŠªåŠ›è¿˜æ˜¯å¼‚å¸¸ç®€é™‹çš„æ€ªç‰©ç±»
+	è‡ªå®šä¹‰æ•Œäººç»§æ‰¿è‡ªEnemy
+	æ³¨æ„é‡è½½DoOnCreated DoOnFrame
+	pwq from ddlå‰çš„pfr
 */
 
 #include "Enemy.h"
@@ -29,9 +29,54 @@ float Enemy::getHP(float hp)
 	return this->healthPoint;
 }
 
-void Enemy::DoOnCreated(){ }
+void Enemy::DoOnCreated(){
+	this->setTag(GROUP_ENEMY);
+	auto enemybody = cocos2d::PhysicsBody::createCircle(5.0f, cocos2d::PhysicsMaterial(1.0f, 0.0f, 0.0f));
+	enemybody->setContactTestBitmask(0x03);
+	enemybody->setCollisionBitmask(0x17);
+	enemybody->setCategoryBitmask(0x04);
+	enemybody->setTag(GROUP_ENEMY);
+	enemybody->setDynamic(true);
+	enemybody->setGravityEnable(false);
+	this->setPhysicsBody(enemybody);
+	srand((unsigned)(time(NULL)));
+	if ((rand() % 100) + 1 < 20)
+	{
+		srand((unsigned)(time(NULL)));
+		itemsDrop.lifeNum = rand() % 3 + 1;
+	}
+	else
+	{
+		srand((unsigned)(time(NULL)));
+		itemsDrop.blueNum = rand() % 3 + 1;
+	}
+}
 
 void Enemy::DoOnFrame(){ }
+
+void Enemy::BeHit(PCommonShot* pb, Player* thePlayer, cocos2d::Scene* sce)
+{
+	healthPoint -= pb->getDmg();
+	if (healthPoint <= 0)
+		DoOnDestroy(thePlayer, sce);
+}
+
+/*void Enemy::DoOnDestroy(Player*	thePlayer, cocos2d::Scene * sce) 
+{
+	auto drop = cocos2d:: CallFunc::create([=]() {
+		auto p = P_Point :: create();
+		p->setPosition(this->getPosition());
+		p -> DoOnCreate();
+		p -> DoOnFrame(thePlayer);
+		p->setScale(1.2f);
+		sce->addChild(p, GROUP_ITEM);
+		});
+	auto delay = cocos2d::DelayTime::create(0.00001);
+	auto a = cocos2d:: Repeat :: create(static_cast<cocos2d:: Spawn*>(cocos2d:: Spawn::create(drop, delay, nullptr)), 3);
+	auto remove = cocos2d::RemoveSelf ::create();
+	this->runAction(cocos2d::Sequence::create(a, remove, nullptr));
+}
+dropæ²¡æžå¥½*/
 
 myEnemy* myEnemy::create(const char* pszFileName)
 {
@@ -45,21 +90,59 @@ myEnemy* myEnemy::create(const char* pszFileName)
 	return nullptr;
 }
 
-void myEnemy::DoOnCreated()//Éú³ÉË²¼äÖ´ÐÐ¶¯×÷
+void myEnemy::DoOnCreated()//ç”Ÿæˆçž¬é—´æ‰§è¡ŒåŠ¨ä½œ
 {
-	auto  rotateBy = cocos2d::RotateBy::create(0.5f, 180.0f);
+	this->setTag(GROUP_ENEMY);
+	auto enemybody = cocos2d::PhysicsBody::createCircle(7.0f, cocos2d::PhysicsMaterial(1.0f, 0.0f, 0.0f));
+	enemybody->setContactTestBitmask(0x03);
+	enemybody->setCollisionBitmask(0x17);
+	enemybody->setCategoryBitmask(0x04);
+	enemybody->setTag(GROUP_ENEMY);
+	enemybody->setDynamic(true);
+	enemybody->setGravityEnable(false);
+	this->setPhysicsBody(enemybody);
+
+	auto rotateBy = cocos2d::RotateBy::create(0.5f, 180.0f);
 	auto sequence = cocos2d::Sequence::create(rotateBy, rotateBy->clone(), nullptr);
 	this->runAction(sequence);
 }
 
-void myEnemy::DoOnFrame()//Ã¿¸ôÒ»¶ÎÊ±¼äËæ»úÒÆ¶¯
+void myEnemy::DoOnFrame()//æ¯éš”ä¸€æ®µæ—¶é—´éšæœºç§»åŠ¨
 {
-	srand((unsigned)(time(NULL)));
-	auto x = cocos2d::random(1.0, 10.0);
-	srand((unsigned)(time(NULL)));
-	auto y = cocos2d::random(1.0, 10.0);
-	auto move1 = cocos2d::MoveBy::create(x/2, cocos2d::Vec2(x, 0));
-	auto move2 = cocos2d::MoveBy::create(y/2, cocos2d::Vec2(0, y));
+	auto a = cocos2d::CallFunc::create([=]() {
+		auto x = cocos2d::random(-5.0, 5.0) * 10;
+		auto y = cocos2d::random(-5.0, 5.0) * 10;
+		auto move1 = cocos2d::MoveBy::create(1, cocos2d::Vec2(x, 0));
+		auto move2 = cocos2d::MoveBy::create(1, cocos2d::Vec2(0, y));
+		this->runAction(cocos2d::Sequence::create(move1, move2, nullptr));
+	});
 	auto delay = cocos2d::DelayTime::create(3);
-	this->runAction(cocos2d::RepeatForever::create(static_cast<cocos2d::Sequence*>(cocos2d::Sequence::create(move1, move2, delay,nullptr))));
+	this->runAction(cocos2d::RepeatForever::create(static_cast<cocos2d::Sequence*>(cocos2d::Sequence::create(a, delay, nullptr))));
+}
+
+chaseEnemy* chaseEnemy::create(const char* pszFileName)
+{
+	chaseEnemy* enemyA = new chaseEnemy();
+	if (enemyA && enemyA->initWithFile(pszFileName))
+	{
+		enemyA->autorelease();
+		return enemyA;
+	}
+	CC_SAFE_DELETE(enemyA);
+	return nullptr;
+}
+
+void chaseEnemy::DoOnFrame(Player* player)
+{
+	auto a = cocos2d::CallFunc::create([=] {
+		auto from = this->getPosition();
+		auto to = player->getPosition();
+		auto sec = to - from;
+		sec.normalize();
+		sec *= 2;
+		auto move = cocos2d::MoveBy::create(1.0 / 30.0, sec);
+		this->runAction(move);
+	});
+	auto delay = cocos2d::DelayTime::create(1.0 / 30.0);
+	this->runAction(cocos2d::RepeatForever::create(static_cast<cocos2d::Sequence*>(cocos2d::Sequence::create(a, delay, nullptr))));
 }

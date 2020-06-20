@@ -1,14 +1,15 @@
-/*
-	ÕâÊÇÒ»¸öÔİÊ±Òì³£¼òÂªµÄ¹ÖÎïÀà
-	×Ô¶¨ÒåµĞÈË¼Ì³Ğ×ÔEnemy
-	×¢ÒâÖØÔØDoOnCreated DoOnFrame
-	pwq from ddlÇ°µÄpfr
+ï»¿/*
+	è¿™æ˜¯ä¸€ä¸ªæš‚æ—¶å¼‚å¸¸ç®€é™‹çš„æ€ªç‰©ç±»
+	è‡ªå®šä¹‰æ•Œäººç»§æ‰¿è‡ªEnemy
+	æ³¨æ„é‡è½½DoOnCreated DoOnFrame
+	pwq from ddlå‰çš„pfr
 */
 
 #ifndef __ENEMY_H__
 #define __ENEMY_H__
 
 #include "cocos2d.h"
+#include "Headers.h"
 
 class Enemy : public cocos2d::Sprite
 {
@@ -16,10 +17,13 @@ public:
 	static Enemy* create(const char* pszFileName);
 	void setHP(float hp);
 	float getHP(float hp);
-	virtual void DoOnCreated();//Éú³ÉË²¼äÖ´ĞĞ¶¯×÷
-	virtual void DoOnFrame();//Ã¿¸ôÒ»¶ÎÊ±¼äËæ»úÒÆ¶¯
+	virtual void DoOnCreated();//ç”Ÿæˆç¬é—´æ‰§è¡ŒåŠ¨ä½œ
+	virtual void DoOnFrame();//æ¯éš”ä¸€æ®µæ—¶é—´éšæœºç§»åŠ¨
+	void BeHit(PCommonShot* pb);
+	void DoOnDestroy();
+	void Drop();
 protected:
-	float healthPoint = 0;//ÉúÃüÖµ
+	float healthPoint = 0;//ç”Ÿå‘½å€¼
 };
 
 class myEnemy : public Enemy
@@ -28,5 +32,11 @@ public:
 	static myEnemy* create(const char* pszFileName);
 	virtual void DoOnCreated();
 	virtual void DoOnFrame();
+};
+class chaseEnemy : public Enemy
+{
+public:
+	static chaseEnemy* create(const char* pszFileName);
+	virtual void DoOnFrame(Player*);
 };
 #endif
