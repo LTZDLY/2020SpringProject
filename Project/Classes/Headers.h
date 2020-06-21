@@ -21,6 +21,8 @@
 #define GROUP_PLAYER_PDD 1024
 #define GROUP_PLAYER_GRAZE 2048
 #define GROUP_PLAYER 64
+#define GROUP_PLAYER_BOMB 512
 #define GROUP_ITEM 128
+#define GROUP_DOOR 8
 
 #endif //__HEADERS_H__

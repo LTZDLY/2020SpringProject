@@ -23,7 +23,6 @@
  ****************************************************************************/
 
 #include "AppDelegate.h"
-#include "HelloWorldScene.h"
 #include "Stage1.h"
 #include "Welcome.h"
 
@@ -110,7 +109,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     register_all_packages();
 
     // create a scene. it's an autorelease object
-    auto scene = StageOP::createScene();
+    auto scene = Welcome::createScene();
 
 	AudioEngine::preload("music/pldead00.mp3");
 	AudioEngine::preload("music/graze.mp3");

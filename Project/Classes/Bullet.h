@@ -21,7 +21,7 @@ public:
 	void DoOnFrame();
 	void DoDefaultAction();
 	void setVelocit(float);
-	void setAngle(float);
+	void setAngle(float);//接受的单位为角度
 	void setRot(float);
 	void setRotVelocity(float);
 	void setRebound(bool);
@@ -33,6 +33,7 @@ public:
 	void setAcceleration(float);
 	void setAccAngle(float);
 	void setDmg(float);
+	void setvMax(float);
 	float getAngle();
 	bool getDestoryable();
 	void beGraze(Player*);
@@ -41,13 +42,14 @@ protected:
 	//子弹速度决定于分速度，与velocity的值无直接关系
 	cocos2d::Vec2 v;//子弹在x轴方向和y轴方向上的分速度
 	float velocity = 0;//子弹速度，单位：像素/帧
-	float angle = 0;//子弹角度，单位：角度
-	float rot = 0;//子弹朝向，单位：角度
-	float rotvelocity = 0;//子弹朝向的旋转速度，单位：角度
+	float vMax = 9999;//子弹最大速度，单位：像素/帧
+	float angle = 0;//子弹角度，以弧度存储
+	float rot = 0;//子弹朝向，单位：以弧度存储
+	float rotvelocity = 0;//子弹朝向的旋转速度，单位：以弧度存储
 	float a = 0;//子弹加速度
-	float ar = 0;//子弹加速度的角度，单位：角度
+	float ar = 0;//子弹加速度的角度，单位：以弧度存储
 	int timer = 0;//子弹的内置计时器
-	float dmg = 0;//子弹伤害
+	float dmg = 1;//子弹伤害
 	int temp1 = 0;
 	int temp2 = 0;
 	bool flag = false;
@@ -81,9 +83,24 @@ class jiaocha :public Bullet {
 public:
 	static jiaocha* create(const char *pszFileName);
 	void DoOnCreate(float, float, int);
-	void DoOnFrame();
+	void DoOnFrame(float);
 	int temp3 = 0;
 };//By LLS
+
+class Follow :public Bullet {
+public:
+	static Follow* create(const char *pszFileName);
+	void DoOnFrame(Player*);
+};//By LLS
+
+class Speed :public Bullet {
+public:
+	static Speed* create(const char *pszFileName);
+	void DoOnFrame(Player*);
+	float vv;
+};//By LLS
+
+
 /*
 class LaserSmall : public Bullet {
 public:

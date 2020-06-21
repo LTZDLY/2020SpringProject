@@ -32,6 +32,7 @@ class Stage : public cocos2d::Scene
 {
 private:
 public:
+	static std::vector<int> aa;
 	Player* _player;
     static cocos2d::Scene* createScene();
     virtual bool init();
@@ -51,6 +52,8 @@ public:
 	cocos2d::Label* _labelScoreGetMax;
 	cocos2d::Label* _labelGraze;
 
+	int enemyNum;
+	float temp;
 protected:
 };
 

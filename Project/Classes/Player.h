@@ -18,21 +18,21 @@ struct PlayerInfo
 {
 	friend class Player;
 public:
-	cocos2d::Vec2 dir;
+	cocos2d::Vec2 dir = { 176.5,50 };
 	bool shift = false;
 	bool shoot = false;
 	bool _collect = true;
 	int keyboardnum = 0;
-private:
-	float _hp = 10;
-	float _v = 0;
-	int _bombs = 0;
+	int _invincibled = 0;
 	int _bombs_cd = 0;
+private:
+	float _hp = 5;
+	float _v = 0;
+	int _bombs = 2;
 	int _powers = 100;
 	int _timer = 0;
 	int _angle = 0;
 	int _bullet_cd = 0;
-	int _invincibled = 0;
 	int _invincibled_cd = 0;
 	int _hit_cd = 0;
 	bool _hit_flag = false;
@@ -65,6 +65,9 @@ public:
 	void beHit(Enemy*);
 	void setInvincibled(int);
 	void powerAdd(int);
+	void addHp(int);
+	void addBomb(int);
+	void addMaxPoint(int);
 	void powerDrop(int);
 	void scoreAdd(LONG32);
 	void grazeAdd(int);
@@ -89,7 +92,7 @@ public:
 	void PCommonShot::setAngle(float);
 	void PCommonShot::setDmg(float);
 	float PCommonShot::getDmg();
-	void PCommonShot::Hit(Player*, Enemy*);
+	void PCommonShot::Hit(Player*, Enemy*, int&);
 protected:
 	float _angle = 0;
 	int _interval = 10;
@@ -101,6 +104,8 @@ protected:
 class PBomb : public PCommonShot {
 public:
 	static PBomb* create();
+	void PBomb::Hit(Player*, Enemy*, int&);
+	void PBomb::Hit(Player*, Bullet*);
 	void PBomb::DoDefaultAction();
 	float vv;
 	float ang;

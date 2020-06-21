@@ -7,7 +7,8 @@
 所有的自定义Sprite类请一定记得重载create函数！！！
  ****************************************************************************/
 
-#include"Bullet.h"
+#include "Bullet.h"
+#include "AudioEngine.h"
 
 Bullet* Bullet::create(const char *filename)
 {
@@ -34,8 +35,9 @@ void Bullet::DoOnCreate(cocos2d::Sprite* player, float hitbox) {
 	}
 	auto physicsBody = cocos2d::PhysicsBody::createCircle(hitbox, cocos2d::PhysicsMaterial(1.0f, 0.0f, 0.0f));
 	physicsBody->setDynamic(false);
-	physicsBody->setContactTestBitmask(0x41);
-	physicsBody->setCollisionBitmask(0x41);
+	physicsBody->setGravityEnable(false);
+	physicsBody->setContactTestBitmask(0xC3);
+	physicsBody->setCollisionBitmask(0xC3);
 	physicsBody->setCategoryBitmask(0x08);
 	this->setPhysicsBody(physicsBody);
 	this->setTag(GROUP_ENEMY_BULLET);
@@ -126,6 +128,12 @@ void Bullet::DoDefaultAction()
 		{
 			this->v.x += this->a * cos(this->ar);
 			this->v.y += this->a * sin(this->ar);
+			this->velocity = sqrt(pow((v.x), 2) + pow((v.y), 2));
+			if (this->velocity > this->vMax) {
+				auto bon = this->velocity / this->vMax;
+				this->v.x /= bon;
+				this->v.y /= bon;
+			}
 		}
 		if (this->bound == true && (now.x < 0 || now.x > 350 || now.y < -30 || now.y > 350)) {
 			auto remove = cocos2d::RemoveSelf::create();
@@ -183,6 +191,7 @@ void Bullet::setDmg(float d)
 {
 	this->dmg = d;
 }
+void Bullet::setvMax(float vm) { this->vMax = vm; }
 void Bullet::setDestroyable(bool f) { this->destroyable = f; }
 void Bullet::setBound(bool f) { this->bound = f; }
 float Bullet::getAngle() { return this->angle; }
@@ -263,15 +272,108 @@ void jiaocha::DoOnCreate(float v, float r, int a)
 	this->runAction(se2);
 }
 
-void jiaocha::DoOnFrame()
+void jiaocha::DoOnFrame(float hitbox)
 {
+	auto physicsBody = cocos2d::PhysicsBody::createCircle(hitbox, cocos2d::PhysicsMaterial(1.0f, 0.0f, 0.0f));
+	physicsBody->setDynamic(false);
+	physicsBody->setGravityEnable(false);
+	physicsBody->setContactTestBitmask(0xC3);
+	physicsBody->setCollisionBitmask(0xC3);
+	physicsBody->setCategoryBitmask(0x08);
+	this->setPhysicsBody(physicsBody);
+	this->setTag(GROUP_ENEMY_BULLET);
+
 	this->DoDefaultAction();
-	auto repeat = cocos2d::CallFunc::create([=]() {
-		auto aa = cocos2d::RemoveSelf::create();
-		if (this->timer == 240) this->runAction(aa);
+}
+
+
+Follow* Follow::create(const char *filename)
+{
+	Follow *sprite = new Follow();
+	if (sprite && sprite->initWithFile(filename))
+	{
+		sprite->autorelease();
+		return sprite;
+	}
+	CC_SAFE_DELETE(sprite);
+	return nullptr;
+}
+
+void Follow::DoOnFrame(Player* player) {
+	this->setAcceleration(0.1);
+	this->setvMax(3.0);
+	auto change = cocos2d::CallFunc::create([=]() {
+		if (this->timer > 300) return;
+		auto from = this->getPosition();
+		auto to = player->getPosition();
+		auto ang = atan((from.x - to.x) / (from.y - to.y));
+		if (from.x > to.x)ang += PI / 2;
+		else ang = PI / 2 + ang;
+		if (from.y > to.y)ang = -ang;
+		else ang = PI - ang;
+		this->setAccAngle(ang / PI * 180);
 	});
-	auto delay = cocos2d::DelayTime::create((1.0 / 30.0));
-	this->runAction(cocos2d::RepeatForever::create(static_cast<cocos2d::Spawn *>(cocos2d::Spawn::create(repeat, delay, nullptr))));
+	auto delayNo = cocos2d::DelayTime::create(1.0 / 30.0);
+	auto aaa = cocos2d::Sequence::create(change, delayNo, nullptr);
+	this->runAction(cocos2d::RepeatForever::create(static_cast<cocos2d::Sequence *>(aaa)));
+
+	this->DoDefaultAction();
+}
+
+Speed* Speed::create(const char *filename)
+{
+	Speed *sprite = new Speed();
+	if (sprite && sprite->initWithFile(filename))
+	{
+		sprite->autorelease();
+		return sprite;
+	}
+	CC_SAFE_DELETE(sprite);
+	return nullptr;
+}
+
+void Speed::DoOnFrame(Player* player) {
+	auto v = this->velocity;
+	vv = v;
+	auto create = cocos2d::CallFunc::create([=]() {
+		vv -= v / 30.0;
+		this->setVelocit(vv);
+	});
+	auto FastOnce = cocos2d::CallFunc::create([=]() {
+		auto from = this->getPosition();
+		auto to = player->getPosition();
+		auto ang = atan((from.x - to.x) / (from.y - to.y));
+		if (from.x > to.x)ang += PI / 2;
+		else ang = PI / 2 + ang;
+		if (from.y > to.y)ang = -ang;
+		else ang = PI - ang;
+		this->setAngle(ang / PI * 180);
+		vv = 10;
+		this->setVelocit(vv);
+	});
+	auto Fast = cocos2d::CallFunc::create([=]() {
+		vv -= 10 / 30.0;
+		this->setVelocit(vv);
+	});
+	auto Slow = cocos2d::CallFunc::create([=]() {
+		auto from = this->getPosition();
+		auto to = player->getPosition();
+		auto ang = atan((from.x - to.x) / (from.y - to.y));
+		if (from.x > to.x)ang += PI / 2;
+		else ang = PI / 2 + ang;
+		if (from.y > to.y)ang = -ang;
+		else ang = PI - ang;
+		this->setAngle(ang / PI * 180);
+		vv = 2;
+		this->setVelocit(vv);
+	});
+	auto delayNo = cocos2d::DelayTime::create(1.0 / 30.0);
+	auto delay = cocos2d::DelayTime::create(0.2);
+	auto reFast = cocos2d::Repeat::create(cocos2d::Sequence::create(create, delayNo, nullptr), 30);
+	auto reSlow = cocos2d::Repeat::create(cocos2d::Sequence::create(Fast, delayNo->clone(), nullptr), 30);
+	this->runAction(cocos2d::Sequence::create(reFast, delay, FastOnce, reSlow, delay->clone(), Slow, nullptr));
+
+	this->DoDefaultAction();
 }
 /*
 LaserSmall* LaserSmall::create(const char *filename)

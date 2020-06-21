@@ -10,6 +10,8 @@
 #include "Player.h"
 #include "Bullet.h"
 #include "Enemy.h"
+#include "Pause.h"
+#include "AudioEngine.h"
 
 Player* Player::create(const char *filename)
 {
@@ -42,12 +44,12 @@ void Player::DoOnCreate() {
 	pdd.pdd1->setPhysicsBody(grazebody);
 
 
-	auto playbody = cocos2d::PhysicsBody::createCircle(1.5f, cocos2d::PhysicsMaterial(1.0f, 0.0f, 0.0f));
-	playbody->setContactTestBitmask(0x3D);//和谁碰撞会处理响应函数
-	playbody->setCollisionBitmask(0x3D);//能和谁碰撞
+	auto playbody = cocos2d::PhysicsBody::createCircle(1.5f, cocos2d::PhysicsMaterial(0.0f, 0.0f, 0.0f));
+	playbody->setContactTestBitmask(0x3C);//和谁碰撞会处理响应函数
+	playbody->setCollisionBitmask(0xBD);//能和谁碰撞
 	playbody->setCategoryBitmask(0x01);//我是谁
 	playbody->setTag(GROUP_PLAYER);
-	playbody->setDynamic(false);
+	playbody->setDynamic(true);
 	playbody->setGravityEnable(false);
 	this->setPhysicsBody(playbody);
 };
@@ -91,9 +93,13 @@ void Player::DoDefaultAction() {
 			return;
 		}
 
+		if (this->info._bombs_cd != 0) {
+			this->info._bombs_cd--;
+		}
+
 		if (info._invincibled == 0 && this->getOpacity() != 255) this->setOpacity(255);
 		if (this->info._collect == false) this->info._collect = true;
-
+		
 		auto now = this->getPosition();
 		auto to = now;
 		switch (info.keyboardnum) {
@@ -171,7 +177,7 @@ void Player::Atk() {
 		auto delay_no = cocos2d::DelayTime::create(0.01);
 		this->runAction(cocos2d::Repeat::create(static_cast<cocos2d::Spawn *>(cocos2d::Spawn::create(shootone, delay_no, nullptr)), times));
 	});
-	auto delay_shoot = cocos2d::DelayTime::create(1.0 / 30.0);
+	auto delay_shoot = cocos2d::DelayTime::create(1.0/30.0);
 	this->runAction(cocos2d::RepeatForever::create(static_cast<cocos2d::Sequence *>(cocos2d::Sequence::create(shoot, delay_shoot, nullptr))));
 }
 
@@ -242,15 +248,24 @@ void Player::beHit(Enemy* enemy)
 void Player::setInvincibled(int t) { this->info._invincibled = t; }
 void Player::powerAdd(int p) {
 	if (this->info._powers + p >= 400) this->info._powers = 400;
-	else this->info._powers += p;
+	else this->info._powers += p; 
 }
-void Player::powerDrop(int p) {
+void Player::addHp(int hp) {
+	if (this->info._hp + hp > 5) this->info._hp = 5;
+	else this->info._hp += hp;
+}
+void Player::addBomb(int b) { 
+	if (this->info._bombs + b >= 8) this->info._bombs = 8;
+	this->info._bombs += b; 
+}
+void Player::addMaxPoint(int t) { this->info._score_get_max += t; }
+void Player::powerDrop(int p){
 	if (this->info._powers - p <= 100) this->info._powers = 100;
 	else this->info._powers -= p;
 }
 void Player::scoreAdd(LONG32 s) { this->info._score += s; }
-void Player::grazeAdd(int n) {
-	this->info._graze += n;
+void Player::grazeAdd(int n) { 
+	this->info._graze += n; 
 	this->info._graze_temp -= n;
 	if (this->info._graze_temp == 0) {
 		this->info._graze_temp = 10;
@@ -266,6 +281,11 @@ float Player::getHp() { return this->info._hp; }
 int Player::getBombs() { return this->info._bombs; }
 
 void Player::setBomb() {
+	if (this->info._bombs_cd != 0) return;
+	if (this->info._bombs <= 0) return;
+	this->info._bombs_cd = 180;
+	this->info._bombs--;
+	this->setInvincibled(210);
 	auto node = this->getParent();
 	std::vector<cocos2d::Color3B> col;
 	std::vector<PBomb*> spr;
@@ -287,7 +307,7 @@ void Player::setBomb() {
 		spr[i]->setDmg(10);
 		spr[i]->DoDefaultAction();
 		spr[i]->setPosition(this->getPosition());
-		node->addChild(spr[i]);
+		node->addChild(spr[i], GROUP_PLAYER_BOMB);
 	}
 }
 
@@ -305,9 +325,10 @@ PCommonShot* PCommonShot::create(const char *filename)
 
 void PCommonShot::DoOnCreate(float f) {
 	auto physicsBody = cocos2d::PhysicsBody::createCircle(f, cocos2d::PhysicsMaterial(1.0f, 0.0f, 0.0f));
-	physicsBody->setDynamic(false);
-	physicsBody->setContactTestBitmask(0x04);
-	physicsBody->setCollisionBitmask(0x04);
+	physicsBody->setDynamic(true);
+	physicsBody->setGravityEnable(false);
+	physicsBody->setContactTestBitmask(0x8C);
+	physicsBody->setCollisionBitmask(0x8C);
 	physicsBody->setCategoryBitmask(0x02);
 	this->setPhysicsBody(physicsBody);
 	this->setTag(GROUP_PLAYER_BULLET);
@@ -341,11 +362,11 @@ void PCommonShot::setAngle(float r) {
 }
 void PCommonShot::setDmg(float d) { this->_dmg = d; }
 float PCommonShot::getDmg() { return this->_dmg; }
-void PCommonShot::Hit(Player* player, Enemy* enemy) {
+void PCommonShot::Hit(Player* player, Enemy* enemy, int& num) {
 	player->scoreAdd(30);
 	auto remove = cocos2d::RemoveSelf::create();
 	this->runAction(remove);
-	enemy->beHit(this, player);
+	enemy->beHit(this->getDmg(), player, num);
 }
 
 PBomb* PBomb::create()
@@ -361,7 +382,31 @@ PBomb* PBomb::create()
 	return nullptr;
 }
 
+void PBomb::Hit(Player* player, Enemy* enemy, int& num) {
+	player->scoreAdd(10);
+	enemy->beHit(this->getDmg(), player, num);
+}
+void PBomb::Hit(Player* player, Bullet* dankumu) {
+	player->scoreAdd(10);
+	auto dir = dankumu->getPosition();
+	if (dankumu->getDestoryable() == false) return;
+	auto pDrop = cocos2d::CallFunc::create([=]() {
+		auto p = GreenPoint::create();
+		p->setPosition(dir);
+		p->DoOnCreate();
+		p->DoOnFrame(player);
+		p->setScale(1.2f);
+		this->getParent()->addChild(p, GROUP_ITEM);
+	});
+	auto delay = cocos2d::DelayTime::create(0.0001);
+	auto a = cocos2d::Spawn::create(pDrop, delay, nullptr);
+	this->runAction(a);
+	dankumu->runAction(cocos2d::RemoveSelf::create());
+}
+
 void PBomb::DoDefaultAction() {
+	this->getPhysicsBody()->setDynamic(false);
+	this->setTag(GROUP_PLAYER_BOMB);
 	vv = 1;
 	ang = this->_angle;
 	auto Move = cocos2d::CallFunc::create([=]() {
