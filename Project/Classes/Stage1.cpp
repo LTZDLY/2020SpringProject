@@ -26,17 +26,24 @@
 #include "Bullet.h"
 #include "Player.h"
 #include "Item.h"
-
+#include "Enemy.h"
+#include "AudioEngine.h"
+#include "Pause.h"
+#include <iomanip>
 USING_NS_CC;
 
 PlayerInfo info_temp;
 
 
 template <typename T> std::string tostr(const T& t) { std::ostringstream os; os << t; return os.str(); }
+std::string tostr_power(float t) { std::ostringstream os; os << std::setiosflags(std::ios::fixed) << std::setprecision(2) << t; return os.str(); }
+
+std::vector<int> Stage::aa = { 0,0,0,0,0,0,0 };
 
 Scene* Stage::createScene()
 {
     return Stage::create();
+
 }
 
 // Print useful error message instead of segfaulting when files are not there.
@@ -57,11 +64,106 @@ Scene* Stage1::createScene()
 }
 
 StageOP::StageOP() {
+	_player = _player->create("player.png");
+	_player->info = info_temp;
+	_player->DoOnCreate();
+	_player->DoOnFrame();
+	_player->setPosition(info_temp.dir);
+	_player->Atk();
+
+
+	this->addChild(_player, GROUP_PLAYER);
+
 
 	auto door = Door::create("CloseNormal.png");
 	door->setPosition(100, 100);
 	door->DoOnCreate(1);
 	this->addChild(door,9999);
+
+}
+
+Stage1::Stage1()
+{
+	
+	_player = _player->create("player.png");
+	_player->info = info_temp;
+	_player->DoOnCreate();
+	_player->DoOnFrame();
+	_player->setPosition(info_temp.dir);
+	_player->Atk();
+
+
+	this->addChild(_player, GROUP_PLAYER);
+
+
+	auto door = Door::create("CloseNormal.png");
+	door->setPosition(200, 200);
+	door->DoOnCreate(0);
+	this->addChild(door, 9999);
+
+	if (aa[1] == true) return;
+
+	int enemyType = random(1, 1);
+	int num;
+	if (enemyType >= 5)num = random(1, 2);
+	else num = random(1, 4);
+	static float temp;
+	temp = 160 - 25 * (num - 1);
+	auto create = CallFunc::create([=]() {
+		switch (enemyType) {
+		case 1:
+			auto _enemy = chaseEnemy::create();
+			_enemy->setPosition(Vec2(176.5, temp));
+			_enemy->DoOnCreated(5);
+			_enemy->DoOnFrame(_player);
+			this->addChild(_enemy, GROUP_ENEMY);
+			break;
+		}
+		temp += 50;
+	});
+	auto delay = cocos2d::DelayTime::create(0.000000001);
+	this->runAction(Repeat::create(static_cast<Spawn *>(Spawn::create(create, delay, nullptr)), num));
+	/*
+	static float a = 0;
+	auto kaihua = CallFunc::create([=]() {
+		a = cocos2d::random(0.0, 360.0);
+		auto shootStar = CallFunc::create([=]() {
+			Bullet *dankumu = Bullet::create("ellipse.png");
+			//屏幕右下角坐标(26.5,0)
+			dankumu->setPosition(Vec2(0, 0));
+			dankumu->setVelocit(0);
+			dankumu->setRot(a);
+			dankumu->setRotVelocity(37);
+			dankumu->setAcceleration(0);
+			dankumu->setAccAngle(-90);
+			dankumu->setDestroyable(false);
+			dankumu->setBound(false);
+			dankumu->DoOnCreate(_player, 30.0);
+			dankumu->DoOnFrame();
+			_enemy->addChild(dankumu, GROUP_ENEMY_BULLET);
+			BlendFunc cbl = { backend::BlendFactor::DST_COLOR,backend::BlendFactor::ONE };
+			//dankumu->setBlendFunc(cbl);
+
+			auto actionBy = SkewBy::create(0.01, 1.5f, -80.0f);
+			dankumu->runAction(actionBy);
+			auto p = P_Point::create();
+			p->setPosition(_enemy->getPosition());
+			p->DoOnCreate();
+			p->DoOnFrame(_player);
+			p->setScale(1.2f);
+			this->addChild(p, GROUP_ITEM);
+
+			a += 360.0 / 3.0;
+
+		});
+		auto delay = cocos2d::DelayTime::create(0.00001);
+		_enemy->runAction(Repeat::create(static_cast<Spawn *>(Spawn::create(shootStar, delay, nullptr)), 3));
+	});
+	auto delay = cocos2d::DelayTime::create(3);
+	_enemy->runAction(Repeat::create(static_cast<Spawn *>(Spawn::create(kaihua, delay, nullptr)), 1));
+	*/
+
+	
 
 }
 bool Stage::init() {
@@ -87,27 +189,48 @@ bool Stage::init() {
 	background->setScale(1.425f);
 	background->setPosition(Vec2((53.0 + 640.0 / 1.5) / 2.0, 160));
 	this->addChild(background, 2000);
+	//左下(26.5, 0)，右上(26.5 + 640 / 1.5, 320)453.166666667
 
 	addKeyboardListener();
 	addContactListener();
 
-	_player = _player->create("player.png");
-	_player->DoOnCreate();
-	_player->setPosition(info_temp.dir);
-	_player->Atk(this);
+	std::string str = "Score:  ";
+	str += tostr(_player->getScore());
+	_labelScore = Label::createWithTTF(str.c_str(), "fonts/arial.ttf", 14);
+	_labelScore->setPosition(380, 290);
+	addChild(_labelScore, 2001);
 
-	auto playbody = PhysicsBody::createCircle(1.5f, PhysicsMaterial(1.0f, 0.0f, 0.0f));
-	playbody->setContactTestBitmask(1);
-	playbody->setCollisionBitmask(1);
-	playbody->setCategoryBitmask(1);
-	playbody->setTag(GROUP_PLAYER);
-	playbody->setDynamic(true);
-	playbody->setGravityEnable(false);
-	_player->setPhysicsBody(playbody);
-	_player->info = info_temp;
-	_player->DoOnFrame();
+	str = "Hp:  ";
+	str += tostr(_player->getHp());
+	_labelHp = Label::createWithTTF(str.c_str(), "fonts/arial.ttf", 14);
+	_labelHp->setPosition(380, 190);
+	addChild(_labelHp, 2001);
 
-	this->addChild(_player, GROUP_PLAYER);
+	str = "Bomb:  ";
+	str += tostr(_player->getBombs());
+	_labelBomb = Label::createWithTTF(str.c_str(), "fonts/arial.ttf", 14);
+	_labelBomb->setPosition(380, 170);
+	addChild(_labelBomb, 2001);
+
+	str = "Power:  ";
+	str += tostr_power(_player->getPower() / 100.0) + " / 4.00";
+	_labelPower = Label::createWithTTF(str.c_str(), "fonts/arial.ttf", 14);
+	_labelPower->setPosition(380, 150);
+	addChild(_labelPower, 2001);
+
+	str = "MaxPoint:  ";
+	str += tostr(_player->getScoreGetMax());
+	_labelScoreGetMax = Label::createWithTTF(str.c_str(), "fonts/arial.ttf", 14);
+	_labelScoreGetMax->setPosition(380, 130);
+	addChild(_labelScoreGetMax, 2001);
+
+	str = "Graze:  ";
+	str += tostr(_player->getGraze());
+	_labelGraze = Label::createWithTTF(str.c_str(), "fonts/arial.ttf", 14);
+	_labelGraze->setPosition(380, 110);
+	addChild(_labelGraze, 2001);
+
+	this->schedule(CC_SCHEDULE_SELECTOR(Stage::refresh), 1.0 / 30.0);
 
 	return true;
 }
@@ -133,6 +256,10 @@ void Stage::onKeyPressed(cocos2d::EventKeyboard::KeyCode code, Event* event) {
 		_player->info.shoot = true;
 		CCLOG("you press z");
 		break;
+	case EventKeyboard::KeyCode::KEY_X:
+		_player->setBomb();
+		CCLOG("you press x");
+		break;
 	case EventKeyboard::KeyCode::KEY_LEFT_ARROW:
 		_player->info.keyboardnum += 1;
 		break;
@@ -144,6 +271,10 @@ void Stage::onKeyPressed(cocos2d::EventKeyboard::KeyCode code, Event* event) {
 		break;
 	case EventKeyboard::KeyCode::KEY_DOWN_ARROW:
 		_player->info.keyboardnum += 8;
+		break;
+	case EventKeyboard::KeyCode::KEY_ESCAPE:
+		auto scene = Pause::createScene();
+		Director::getInstance()->pushScene(scene);
 		break;
 	}
 }
@@ -178,11 +309,11 @@ void Stage::addContactListener() {
 bool Stage::onConcactBegin(PhysicsContact & contact) {
 	auto nodeA = contact.getShapeA()->getBody()->getNode();
 	auto nodeB = contact.getShapeB()->getBody()->getNode();
-	if (nodeA->getTag() == nodeB->getTag()) return true;
 	std::stringstream ss;
 	std::string s;
-	switch (nodeA->getTag() + nodeB->getTag())
-	{
+	int temp = -1;
+	bool flag = true;
+	switch (nodeA->getTag() + nodeB->getTag()) {
 	case GROUP_PLAYER + GROUP_ENEMY_BULLET:
 		nodeA->getTag() == GROUP_PLAYER ?
 			static_cast<Player*>(nodeA)->beHit(static_cast<Bullet*>(nodeB)) :
@@ -191,27 +322,67 @@ bool Stage::onConcactBegin(PhysicsContact & contact) {
 		break;
 	case GROUP_PLAYER_BULLET + GROUP_ENEMY:
 		nodeA->getTag() == GROUP_PLAYER_BULLET ?
-			static_cast<PCommonShot*>(nodeA)->Hit(static_cast<Sprite*>(nodeB)) :
-			static_cast<PCommonShot*>(nodeB)->Hit(static_cast<Sprite*>(nodeA));
+			static_cast<PCommonShot*>(nodeA)->Hit(_player, static_cast<Enemy*>(nodeB)) :
+			static_cast<PCommonShot*>(nodeB)->Hit(_player, static_cast<Enemy*>(nodeA));
 		CCLOG("p_b删除，e掉血");
 		break;
 	case GROUP_PLAYER + GROUP_ENEMY:
 		CCLOG("p掉血");
+		nodeA->getTag() == GROUP_PLAYER ?
+			static_cast<Player*>(nodeA)->beHit(static_cast<Enemy*>(nodeB)) :
+			static_cast<Player*>(nodeB)->beHit(static_cast<Enemy*>(nodeA));
+			
+		break;
+	case GROUP_PLAYER_GRAZE + GROUP_ENEMY_BULLET:
+		CCLOG("graze");
+		nodeA->getTag() == GROUP_ENEMY_BULLET ?
+			static_cast<Bullet*>(nodeA)->beGraze(_player) :
+			static_cast<Bullet*>(nodeB)->beGraze(_player);
+			
 		break;
 	case GROUP_PLAYER + GROUP_ITEM:
+		nodeA->getTag() == GROUP_PLAYER ?
+			flag = static_cast<Player*>(nodeA)->info._collect :
+			flag = static_cast<Player*>(nodeB)->info._collect;
+		if (flag == false) return false;
+		nodeA->getTag() == GROUP_ITEM ?
+			temp = static_cast<Item*>(nodeA)->getNum() :
+			temp = static_cast<Item*>(nodeB)->getNum();
+		switch (temp) {
+		case GROUP_ITEM_P_POINT:
+			nodeA->getTag() == GROUP_ITEM ?
+				static_cast<P_Point*>(nodeA)->DoOnCollect(_player) :
+				static_cast<P_Point*>(nodeB)->DoOnCollect(_player);
+			break;
+		case GROUP_ITEM_BLUE_POINT:
+			nodeA->getTag() == GROUP_ITEM ?
+				static_cast<BluePoint*>(nodeA)->DoOnCollect(_player) :
+				static_cast<BluePoint*>(nodeB)->DoOnCollect(_player);
+			break;
+		case GROUP_ITEM_BOMB:
+			nodeA->getTag() == GROUP_ITEM ?
+				static_cast<Bomb*>(nodeA)->DoOnCollect(_player) :
+				static_cast<Bomb*>(nodeB)->DoOnCollect(_player);
+			break;
+		case GROUP_ITEM_LIFE:
+			nodeA->getTag() == GROUP_ITEM ?
+				static_cast<LifePiece*>(nodeA)->DoOnCollect(_player) :
+				static_cast<LifePiece*>(nodeB)->DoOnCollect(_player);
+			break;
+		default:
+			break;
+		}
 		CCLOG("item删除");
 		break;
 	case GROUP_PLAYER + GROUP_DOOR:
 		CCLOG("Teleport");
 		info_temp = _player->info;
 		info_temp.dir = _player->getPosition();
-		int temp = -1;
 		nodeA->getTag() == GROUP_DOOR ?
 			temp = static_cast<Door*>(nodeA)->getNum() :
 			temp = static_cast<Door*>(nodeB)->getNum();
 		Scene* scene;
-		switch (temp)
-		{
+		switch (temp) {
 		case 0:
 			scene = StageOP::createScene();
 			break;
@@ -227,12 +398,30 @@ bool Stage::onConcactBegin(PhysicsContact & contact) {
 	return true;
 }
 
-Stage1::Stage1()
-{
+void Stage::refresh(float dt) {
+	std::string str = "Score:  ";
+	str += tostr(_player->getScore());
+	_labelScore->setString(str.c_str());
 
-	auto door = Door::create("CloseNormal.png");
-	door->setPosition(200, 200);
-	door->DoOnCreate(0);
-	this->addChild(door, 9999);
+	str = "Hp:  ";
+	str += tostr(_player->getHp());
+	_labelPower->setString(str.c_str());
+
+	str = "Bomb:  ";
+	str += tostr_power(_player->getBombs());
+	_labelPower->setString(str.c_str());
+
+	str = "Power:  ";
+	str += tostr_power(_player->getPower() / 100.0) + " / 4.00";
+	_labelPower->setString(str.c_str());
+
+	str = "MaxPoint:  ";
+	str += tostr(_player->getScoreGetMax());
+	_labelScoreGetMax->setString(str.c_str());
+
+	str = "Graze:  ";
+	str += tostr(_player->getGraze());
+	_labelGraze->setString(str.c_str());
 
 }
+

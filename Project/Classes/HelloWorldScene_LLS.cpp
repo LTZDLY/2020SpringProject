@@ -130,12 +130,11 @@ void HelloWorld::addMonster(float dt) {
 	//以上为第一次试验代码，请勿作为将来写代码的参考
 	*/
 
-	
+	/*
 	//测试简单子弹和高光效果，成功
 	auto shootStar = CallFunc::create([=]() {
 		Bullet *dankumu = Bullet::create("grain.png");
 		Bullet *dankumu2 = Bullet::create("grain.png");
-
 		auto physicsBody = PhysicsBody::createCircle(1.0f, PhysicsMaterial(1.0f, 0.0f, 0.0f));
 		physicsBody->setDynamic(false);
 		physicsBody->setContactTestBitmask(0xFFFFFFFF);
@@ -159,10 +158,10 @@ void HelloWorld::addMonster(float dt) {
 	});
 	auto delay = cocos2d::DelayTime::create(0.3);
 	_enemy->runAction(Repeat::create(static_cast<Spawn *>(Spawn::create(shootStar, delay, nullptr)), 1));
-	//简单子弹的调用如上所示
+	//简单子弹的调用如上所示*/
 	
 
-	/*
+	
 	//测试lstg中的task嵌套效果，未完成
 	//测试自定义子弹和task套循环，成功
 	temp = 180;
@@ -184,7 +183,7 @@ void HelloWorld::addMonster(float dt) {
 	auto delay = cocos2d::DelayTime::create(2);
 	_enemy->runAction(RepeatForever::create(static_cast<Spawn *>(Spawn::create(shootStar2, delay, nullptr))));
 	//自定义子弹的调用如上所示
-	*/
+	
 
 	/*
 
@@ -204,7 +203,7 @@ void HelloWorld::addPlayer(float dt) {
 	_player = _player->create("player.png");
 	_player->DoOnCreate();
 	_player->setPosition(Vec2(150,150));
-	_player->Atk(this);
+	_player->Atk();
 
 	auto playbody = PhysicsBody::createCircle(1.5f, PhysicsMaterial(1.0f, 0.0f, 0.0f));
 	playbody->setContactTestBitmask(1);
@@ -291,7 +290,7 @@ bool HelloWorld::init()
 	enemybody->setGravityEnable(false);
 	_enemy->setPhysicsBody(enemybody);
 
-	_enemy->setPosition(Vec2(winSize.width * 0.8, winSize.height * 0.5));
+	_enemy->setPosition(Vec2(150,150));
 	this->addChild(_enemy, GROUP_ENEMY);
 	_enemy->setTag(GROUP_ENEMY);
 
@@ -405,14 +404,14 @@ void HelloWorld::addContactListener() {
 }
 
 
-bool HelloWorld::onConcactBegin(PhysicsContact & contact) {
+bool HelloWorld::onConcactBegin(PhysicsContact & contact) {/*
 	auto nodeA = contact.getShapeA()->getBody()->getNode();
 	auto nodeB = contact.getShapeB()->getBody()->getNode();
 	if (nodeA->getTag() == nodeB->getTag()) return true;
 	std::stringstream ss;
 	std::string s;
-	switch (nodeA->getTag() + nodeB->getTag())
-	{
+	int temp = -1;
+	switch (nodeA->getTag() + nodeB->getTag()) {
 	case GROUP_PLAYER + GROUP_ENEMY_BULLET:
 		nodeA->getTag() == GROUP_PLAYER ?
 			static_cast<Player*>(nodeA)->beHit(static_cast<Bullet*>(nodeB)) :
@@ -420,20 +419,59 @@ bool HelloWorld::onConcactBegin(PhysicsContact & contact) {
 		CCLOG("e_b删除，p掉血");
 		break;
 	case GROUP_PLAYER_BULLET + GROUP_ENEMY:
-		nodeA->getTag() == GROUP_PLAYER_BULLET ? 
-			static_cast<PCommonShot*>(nodeA)->Hit(static_cast<Sprite*>(nodeB)): 
-			static_cast<PCommonShot*>(nodeB)->Hit(static_cast<Sprite*>(nodeA));
+		nodeA->getTag() == GROUP_PLAYER_BULLET ?
+			static_cast<PCommonShot*>(nodeA)->Hit(_player, static_cast<Sprite*>(nodeB)) :
+			static_cast<PCommonShot*>(nodeB)->Hit(_player, static_cast<Sprite*>(nodeA));
 		CCLOG("p_b删除，e掉血");
 		break;
 	case GROUP_PLAYER + GROUP_ENEMY:
 		CCLOG("p掉血");
+		nodeA->getTag() == GROUP_PLAYER ?
+			static_cast<Player*>(nodeA)->beHit(static_cast<Enemy*>(nodeB)) :
+			static_cast<Player*>(nodeB)->beHit(static_cast<Enemy*>(nodeA));
+			
 		break;
 	case GROUP_PLAYER + GROUP_ITEM:
+		nodeA->getTag() == GROUP_ITEM ?
+			temp = static_cast<Item*>(nodeA)->getNum() :
+			temp = static_cast<Item*>(nodeB)->getNum();
+		switch (temp) {
+		case GROUP_ITEM_P_POINT:
+			nodeA->getTag() == GROUP_ITEM ?
+				static_cast<P_Point*>(nodeA)->DoOnCollect(_player) :
+				static_cast<P_Point*>(nodeB)->DoOnCollect(_player);
+			break;
+		case GROUP_ITEM_BLUE_POINT:
+			nodeA->getTag() == GROUP_ITEM ?
+				static_cast<BluePoint*>(nodeA)->DoOnCollect(_player) :
+				static_cast<BluePoint*>(nodeB)->DoOnCollect(_player);
+			break;
+		default:
+			break;
+		}
 		CCLOG("item删除");
 		break;
-	default:
+	case GROUP_PLAYER + GROUP_DOOR:
+		CCLOG("Teleport");
+		info_temp = _player->info;
+		info_temp.dir = _player->getPosition();
+		nodeA->getTag() == GROUP_DOOR ?
+			temp = static_cast<Door*>(nodeA)->getNum() :
+			temp = static_cast<Door*>(nodeB)->getNum();
+		Scene* scene;
+		switch (temp) {
+		case 0:
+			scene = StageOP::createScene();
+			break;
+		case 1:
+			scene = Stage1::createScene();
+			break;
+		default:
+			break;
+		}
+		Director::getInstance()->replaceScene(scene);
 		break;
-	}
+	}*/
 	return true;
 }
 

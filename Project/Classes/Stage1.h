@@ -26,12 +26,13 @@
 #define __STAGE1_H__
 
 #include "cocos2d.h"
-#include "Player.h"
+#include "Headers.h"
 
 class Stage : public cocos2d::Scene
 {
 private:
 public:
+	static std::vector<int> aa;
 	Player* _player;
     static cocos2d::Scene* createScene();
     virtual bool init();
@@ -42,6 +43,15 @@ public:
     CREATE_FUNC(Stage);
 	bool onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* unused_event);
 	bool onConcactBegin(cocos2d::PhysicsContact & contact);
+
+	void refresh(float dt);
+	cocos2d::Label* _labelScore;
+	cocos2d::Label* _labelHp;
+	cocos2d::Label* _labelBomb;
+	cocos2d::Label* _labelPower;
+	cocos2d::Label* _labelScoreGetMax;
+	cocos2d::Label* _labelGraze;
+
 protected:
 };
 

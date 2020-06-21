@@ -10,32 +10,33 @@
 #ifndef __BULLET_H__
 #define __BULLET_H__
 
-#define GROUP_ENEMY_BULLET 256
-#define GROUP_ENEMY 16
-
 #include "cocos2d.h"
+#include "Headers.h"
 
 //简单子弹
 class Bullet : public cocos2d::Sprite {
 public:
 	static Bullet* create(const char *pszFileName);
-	void DoOnCreate();
+	void DoOnCreate(cocos2d::Sprite*, float);
 	void DoOnFrame();
 	void DoDefaultAction();
 	void setVelocit(float);
 	void setAngle(float);
 	void setRot(float);
 	void setRotVelocity(float);
+	void setRebound(bool);
+	void setShuttle(bool);
+	void setDestroyable(bool);
+	void setBound(bool);
+	void setAim(bool);
+	void setNavi(bool);
 	void setAcceleration(float);
 	void setAccAngle(float);
 	void setDmg(float);
-	float getDmg(float);
-	bool aim = false;//是否对着自机
-	bool navi = true;//是否保持朝向与角度一致
-	bool rebound = false;//是否反弹
-	bool shuttle = false;//是否穿板
-	bool bound = true;//是否出屏消弹
-	bool destroyable = true;//是否可被摧毁
+	float getAngle();
+	bool getDestoryable();
+	void beGraze(Player*);
+	float getDmg();
 protected:
 	//子弹速度决定于分速度，与velocity的值无直接关系
 	cocos2d::Vec2 v;//子弹在x轴方向和y轴方向上的分速度
@@ -46,9 +47,17 @@ protected:
 	float a = 0;//子弹加速度
 	float ar = 0;//子弹加速度的角度，单位：角度
 	int timer = 0;//子弹的内置计时器
-	float temp1 = 0;
-	float temp2 = 0;
 	float dmg = 0;//子弹伤害
+	int temp1 = 0;
+	int temp2 = 0;
+	bool flag = false;
+	bool begraze = false;//是否被擦弹
+	bool aim = false;//是否对着自机
+	bool navi = true;//是否保持朝向与角度一致
+	bool rebound = false;//是否反弹
+	bool shuttle = false;//是否穿板
+	bool bound = true;//是否出屏消弹
+	bool destroyable = true;//是否可被摧毁
 };//By LLS
 
 //子弹组尝试
@@ -75,5 +84,13 @@ public:
 	void DoOnFrame();
 	int temp3 = 0;
 };//By LLS
-
+/*
+class LaserSmall : public Bullet {
+public:
+	static LaserSmall* create(const char *pszFileName);
+	void DoOnCreate(cocos2d::Sprite*, float);
+	void DoOnFrame();
+	bool destroyable = false;//是否可被摧毁
+};
+*/
 #endif //__BULLET_H__

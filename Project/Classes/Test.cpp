@@ -30,7 +30,7 @@ bool Test::init()
 		return false;
 	}
 
-	auto i = AudioEngine::play2d("music/00.mp3", true);
+	auto i = AudioEngine::play2d("music/00.mp3", true, 1.0f);
 	AudioEngine::preload("music/cancel00.mp3");
 	AudioEngine::preload("music/ok00.mp3");
 
@@ -99,6 +99,7 @@ bool Test::init()
 
 void Test::menuCloseCallback(Ref* pSender)
 {
+
 	AudioEngine::end();
 	auto play = cocos2d::CallFunc::create([]() {
 		AudioEngine::play2d("music/cancel00.mp3", false, 1.0f);
@@ -108,7 +109,6 @@ void Test::menuCloseCallback(Ref* pSender)
 		Director::getInstance()->end();
 	});
 	this->runAction(Sequence::create(play, delay, end, nullptr));
-
 
 }
 void Test::menuPlayCallback(Ref* pSender)

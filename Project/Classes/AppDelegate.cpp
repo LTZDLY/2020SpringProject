@@ -27,7 +27,7 @@
 #include "Stage1.h"
 #include "Welcome.h"
 
-// #define USE_AUDIO_ENGINE 1
+#define USE_AUDIO_ENGINE 1
 
 #if USE_AUDIO_ENGINE
 #include "audio/include/AudioEngine.h"
@@ -112,8 +112,12 @@ bool AppDelegate::applicationDidFinishLaunching() {
     // create a scene. it's an autorelease object
     auto scene = StageOP::createScene();
 
+	AudioEngine::preload("music/pldead00.mp3");
+	AudioEngine::preload("music/graze.mp3");
+
     // run
     director->runWithScene(scene);
+
 
     return true;
 }

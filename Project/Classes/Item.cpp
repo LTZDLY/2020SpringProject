@@ -25,9 +25,9 @@ void Door::DoOnCreate(int n) {
 	num = n;
 	this->setTag(GROUP_DOOR);
 	auto physicsbody = cocos2d::PhysicsBody::createCircle(3.0f, cocos2d::PhysicsMaterial(1.0f, 0.0f, 0.0f));
-	physicsbody->setContactTestBitmask(1);
-	physicsbody->setCollisionBitmask(1);
-	physicsbody->setCategoryBitmask(1);
+	physicsbody->setContactTestBitmask(0x01);
+	physicsbody->setCollisionBitmask(0x01);
+	physicsbody->setCategoryBitmask(0x20);
 	physicsbody->setTag(GROUP_DOOR);
 	physicsbody->setDynamic(true);
 	physicsbody->setGravityEnable(false);
@@ -49,4 +49,118 @@ Item* Item::create(const char *filename)
 	}
 	CC_SAFE_DELETE(sprite);
 	return nullptr;
+}
+
+void Item::DoOnCreate() {
+	this->setTag(GROUP_ITEM);
+	float r = cocos2d::random(0.0, 2 * acos(-1));
+	float v = cocos2d::random(5.0, 10.0);
+	float x = v * 5;
+	cocos2d::Vec2 to = { x*cos(r),x*sin(r) };
+	auto move_ease_in = cocos2d::EaseExponentialOut::create(cocos2d::MoveBy::create(1.5, to));
+	this->runAction(move_ease_in);
+
+	auto physicsbody = cocos2d::PhysicsBody::createCircle(5.0f, cocos2d::PhysicsMaterial(1.0f, 1.0f, 0.0f));
+	physicsbody->setContactTestBitmask(0x05);
+	physicsbody->setCollisionBitmask(0x15);
+	physicsbody->setCategoryBitmask(0x10);
+	physicsbody->setTag(GROUP_ITEM);
+	physicsbody->setDynamic(true);
+	physicsbody->setGravityEnable(false);
+	this->setPhysicsBody(physicsbody);
+
+}
+
+void Item::DoOnFrame(Player* player) {
+	auto a = cocos2d::CallFunc::create([=] {
+		auto from = this->getPosition();
+		auto to = player->getPosition();
+		auto distance = sqrt(pow((from.x - to.x), 2) + pow((from.y - to.y), 2));
+		if (player->info._collect == true && distance < 50) {
+			auto sec = to - from;
+			sec.normalize();
+			sec *= 5;
+			auto move = cocos2d::MoveBy::create(1.0 / 30.0, sec);
+			this->runAction(move);
+		}
+	});
+	auto delay = cocos2d::DelayTime::create(1.0/30.0);
+	this->runAction(cocos2d::RepeatForever::create(static_cast<cocos2d::Sequence*>(cocos2d::Sequence::create(a, delay, nullptr))));
+}
+void Item::DoOnCollect() {}
+int Item::getNum() { return _num; }
+
+void Item::setNum(int num) { _num = num; }
+
+P_Point* P_Point::create() {
+	const char *filename = "Images/item_01.png";
+	P_Point *sprite = new P_Point();
+	if (sprite && sprite->initWithFile(filename))
+	{
+		sprite->autorelease();
+		sprite->setNum(GROUP_ITEM_P_POINT);
+		return sprite;
+	}
+	CC_SAFE_DELETE(sprite);
+	return nullptr;
+}
+void P_Point::DoOnCollect(Player* _player) {
+	_player->powerAdd(2);
+	_player->scoreAdd(10000);
+	auto remove = cocos2d::RemoveSelf::create();
+	this->runAction(remove);
+}
+
+BluePoint* BluePoint::create() {
+	const char *filename = "Images/item_02.png";
+	BluePoint *sprite = new BluePoint();
+	if (sprite && sprite->initWithFile(filename))
+	{
+		sprite->autorelease();
+		sprite->setNum(GROUP_ITEM_BLUE_POINT);
+		return sprite;
+	}
+	CC_SAFE_DELETE(sprite);
+	return nullptr;
+}
+void BluePoint::DoOnCollect(Player* _player) {
+	_player->scoreAdd(_player->getScoreGetMax());
+	auto remove = cocos2d::RemoveSelf::create();
+	this->runAction(remove);
+}
+
+LifePiece* LifePiece::create() {
+	const char *filename = "Images/item_05.png";
+	LifePiece *sprite = new LifePiece();
+	if (sprite && sprite->initWithFile(filename))
+	{
+		sprite->autorelease();
+		sprite->setNum(GROUP_ITEM_LIFE);
+		return sprite;
+	}
+	CC_SAFE_DELETE(sprite);
+	return nullptr;
+}
+void LifePiece::DoOnCollect(Player* _player) {
+	//_player->addHp(1);
+	auto remove = cocos2d::RemoveSelf::create();
+	this->runAction(remove);
+}
+
+Bomb* Bomb::create() {
+	const char *filename = "Images/item_18.png";
+	Bomb *sprite = new Bomb();
+	if (sprite && sprite->initWithFile(filename))
+	{
+		sprite->autorelease();
+		sprite->setNum(GROUP_ITEM_BOMB);
+		return sprite;
+	}
+	CC_SAFE_DELETE(sprite);
+	return nullptr;
+}
+void Bomb::DoOnCollect(Player* _player) {
+	//_player->addBomb(1);
+	auto remove = cocos2d::RemoveSelf::create();
+	this->runAction(remove);
 }
