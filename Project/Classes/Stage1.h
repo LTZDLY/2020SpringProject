@@ -32,7 +32,6 @@ class Stage : public cocos2d::Scene
 {
 private:
 public:
-	static std::vector<int> aa;
 	Player* _player;
     static cocos2d::Scene* createScene();
     virtual bool init();
@@ -67,6 +66,41 @@ public:
 	static cocos2d::Scene* createScene();
 	CREATE_FUNC(Stage1);
 	Stage1();
+};
+
+class Stage2 : public Stage {
+public:
+	static cocos2d::Scene* createScene();
+	CREATE_FUNC(Stage2);
+	Stage2();
+};
+
+class Stage3 : public Stage {
+public:
+	static cocos2d::Scene* createScene();
+	CREATE_FUNC(Stage3);
+	Stage3();
+};
+
+class Stage4 : public Stage {
+public:
+	static cocos2d::Scene* createScene();
+	CREATE_FUNC(Stage4);
+	Stage4();
+};
+
+class Stage5 : public Stage {
+public:
+	static cocos2d::Scene* createScene();
+	CREATE_FUNC(Stage5);
+	Stage5();
+};
+
+class Stage6 : public Stage {
+public:
+	static cocos2d::Scene* createScene();
+	CREATE_FUNC(Stage6);
+	Stage6();
 };
 
 

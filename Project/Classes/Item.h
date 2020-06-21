@@ -19,8 +19,17 @@
 #define GROUP_ITEM_BLUE_POINT 2
 #define GROUP_ITEM_BOMB 3
 #define GROUP_ITEM_LIFE 4
+#define GROUP_BARRIERS 7
 
-
+class Barriers : public cocos2d::Sprite {
+public:
+	static Barriers* create(const char *pszFileName);
+	void DoOnCreate(int);
+	void DoOnFrame();
+	int getNum();
+private:
+	int num_B;
+};
 
 
 class Door : public cocos2d::Sprite {
@@ -55,7 +64,7 @@ public:
 	static BluePoint* create();
 	virtual void DoOnCollect(Player*);
 };
-class LifePiece: public Item {
+class LifePiece : public Item {
 public:
 	static LifePiece* create();
 	virtual void DoOnCollect(Player*);

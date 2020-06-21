@@ -8,7 +8,6 @@
  ****************************************************************************/
 
 #include"Bullet.h"
-#include "AudioEngine.h"
 
 Bullet* Bullet::create(const char *filename)
 {
@@ -52,12 +51,12 @@ void Bullet::DoOnFrame()
 				flag = true;
 				CCLOG("Rebound");
 			}
-			else if (now.x > 303){
+			else if (now.x > 303) {
 				this->setAngle(180 - this->angle / PI * 180);
 				flag = true;
 				CCLOG("Rebound");
 			}
-			else if (now.y < 13){
+			else if (now.y < 13) {
 				this->setAngle(-this->angle / PI * 180);
 				flag = true;
 				CCLOG("Rebound");
@@ -93,16 +92,6 @@ void Bullet::DoOnFrame()
 	});
 	auto delay = cocos2d::DelayTime::create(1.0 / 30.0);
 	this->runAction(cocos2d::RepeatForever::create(static_cast<cocos2d::Sequence *>(cocos2d::Sequence::create(a, delay, nullptr))));
-	/*
-	if 出版==ture and 反弹==ture and flag == 0
-	反弹;
-	flag = 1;
-	*/
-	/*
-	if 出版==ture and 穿板==ture and flag == 0
-	穿板;
-	flag = 1;
-	*/
 }
 void Bullet::DoDefaultAction() 
 {
@@ -198,7 +187,7 @@ void Bullet::setDestroyable(bool f) { this->destroyable = f; }
 void Bullet::setBound(bool f) { this->bound = f; }
 float Bullet::getAngle() { return this->angle; }
 bool Bullet::getDestoryable() { return this->destroyable; }
-void Bullet::beGraze(Player* player){
+void Bullet::beGraze(Player* player) {
 	if (this->begraze == true) return;
 	cocos2d::AudioEngine::play2d("music/graze.mp3", false, 0.2f);
 	player->grazeAdd(1);

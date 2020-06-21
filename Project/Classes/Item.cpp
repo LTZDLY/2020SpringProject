@@ -38,6 +38,32 @@ void Door::DoOnFrame() {
 }
 int Door::getNum() { return num; }
 
+Barriers* Barriers::create(const char *filename)
+{
+	Barriers *sprite = new Barriers();
+	if (sprite && sprite->initWithFile(filename))
+	{
+		sprite->autorelease();
+		return sprite;
+	}
+	CC_SAFE_DELETE(sprite);
+	return nullptr;
+}
+
+void Barriers::DoOnCreate(int n) {
+	num_B = n;
+	this->setTag(GROUP_BARRIERS);
+	auto physicsbody = cocos2d::PhysicsBody::createCircle(25.0f, cocos2d::PhysicsMaterial(0xff, 0.0f, 0.0f));
+	physicsbody->setContactTestBitmask(1);
+	physicsbody->setCollisionBitmask(0x01);
+	physicsbody->setCategoryBitmask(0x3D);
+	physicsbody->setTag(GROUP_BARRIERS);
+	physicsbody->setDynamic(false);
+	physicsbody->setGravityEnable(false);
+	this->setPhysicsBody(physicsbody);
+}
+
+
 
 Item* Item::create(const char *filename)
 {
@@ -84,7 +110,7 @@ void Item::DoOnFrame(Player* player) {
 			this->runAction(move);
 		}
 	});
-	auto delay = cocos2d::DelayTime::create(1.0/30.0);
+	auto delay = cocos2d::DelayTime::create(1.0 / 30.0);
 	this->runAction(cocos2d::RepeatForever::create(static_cast<cocos2d::Sequence*>(cocos2d::Sequence::create(a, delay, nullptr))));
 }
 void Item::DoOnCollect() {}

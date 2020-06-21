@@ -10,7 +10,6 @@
 #include "Player.h"
 #include "Bullet.h"
 #include "Enemy.h"
-#include "AudioEngine.h"
 
 Player* Player::create(const char *filename)
 {
@@ -94,7 +93,7 @@ void Player::DoDefaultAction() {
 
 		if (info._invincibled == 0 && this->getOpacity() != 255) this->setOpacity(255);
 		if (this->info._collect == false) this->info._collect = true;
-		
+
 		auto now = this->getPosition();
 		auto to = now;
 		switch (info.keyboardnum) {
@@ -172,7 +171,7 @@ void Player::Atk() {
 		auto delay_no = cocos2d::DelayTime::create(0.01);
 		this->runAction(cocos2d::Repeat::create(static_cast<cocos2d::Spawn *>(cocos2d::Spawn::create(shootone, delay_no, nullptr)), times));
 	});
-	auto delay_shoot = cocos2d::DelayTime::create(1.0/30.0);
+	auto delay_shoot = cocos2d::DelayTime::create(1.0 / 30.0);
 	this->runAction(cocos2d::RepeatForever::create(static_cast<cocos2d::Sequence *>(cocos2d::Sequence::create(shoot, delay_shoot, nullptr))));
 }
 
@@ -243,15 +242,15 @@ void Player::beHit(Enemy* enemy)
 void Player::setInvincibled(int t) { this->info._invincibled = t; }
 void Player::powerAdd(int p) {
 	if (this->info._powers + p >= 400) this->info._powers = 400;
-	else this->info._powers += p; 
+	else this->info._powers += p;
 }
-void Player::powerDrop(int p){
+void Player::powerDrop(int p) {
 	if (this->info._powers - p <= 100) this->info._powers = 100;
 	else this->info._powers -= p;
 }
 void Player::scoreAdd(LONG32 s) { this->info._score += s; }
-void Player::grazeAdd(int n) { 
-	this->info._graze += n; 
+void Player::grazeAdd(int n) {
+	this->info._graze += n;
 	this->info._graze_temp -= n;
 	if (this->info._graze_temp == 0) {
 		this->info._graze_temp = 10;

@@ -99,7 +99,6 @@ bool Test::init()
 
 void Test::menuCloseCallback(Ref* pSender)
 {
-
 	AudioEngine::end();
 	auto play = cocos2d::CallFunc::create([]() {
 		AudioEngine::play2d("music/cancel00.mp3", false, 1.0f);
@@ -109,6 +108,7 @@ void Test::menuCloseCallback(Ref* pSender)
 		Director::getInstance()->end();
 	});
 	this->runAction(Sequence::create(play, delay, end, nullptr));
+
 
 }
 void Test::menuPlayCallback(Ref* pSender)
