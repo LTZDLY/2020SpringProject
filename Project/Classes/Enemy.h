@@ -11,6 +11,11 @@
 #include "cocos2d.h"
 #include "Headers.h"
 
+struct itemList
+{
+	int pNum, blueNum, bombNum, lifeNum;
+};
+
 class Enemy : public cocos2d::Sprite
 {
 public:
@@ -19,11 +24,11 @@ public:
 	float getHP(float hp);
 	virtual void DoOnCreated();//生成瞬间执行动作
 	virtual void DoOnFrame();//每隔一段时间随机移动
-	void BeHit(PCommonShot* pb);
-	void DoOnDestroy();
-	void Drop();
+	void BeHit(PCommonShot* pb, Player* thePlayer, cocos2d::Scene* sce);
+	void DoOnDestroy(Player* thePlayer, cocos2d::Scene* sce);
 protected:
 	float healthPoint = 0;//生命值
+	itemList itemsDrop;
 };
 
 class myEnemy : public Enemy
