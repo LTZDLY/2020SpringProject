@@ -151,27 +151,30 @@ Stage1::Stage1()
 	this->addChild(_player, GROUP_PLAYER);
 
 
-
-	int enemyType = random(1, 1);
-	int num;
-	if (enemyType >= 5)num = random(1, 2);
-	else num = random(1, 4);
-	static float temp;
-	temp = 160 - 25 * (num - 1);
-	auto create = CallFunc::create([=]() {
-		switch (enemyType) {
-		case 1:
-			auto _enemy = chaseEnemy::create();
-			_enemy->setPosition(Vec2(176.5, temp));
-			_enemy->DoOnCreated(5);
-			_enemy->DoOnFrame(_player);
-			this->addChild(_enemy, GROUP_ENEMY);
-			break;
-		}
-		temp += 50;
-	});
-	auto delay = cocos2d::DelayTime::create(0.000000001);
-	this->runAction(Repeat::create(static_cast<Spawn *>(Spawn::create(create, delay, nullptr)), num));
+	if (roomStat[0] == 0) {
+        int enemyType = random(1, 1);
+	    int num;
+	    if (enemyType >= 5)num = random(1, 2);
+	    else num = random(1, 4);
+	    static float temp;
+	    temp = 160 - 25 * (num - 1);
+	    auto create = CallFunc::create([=]() {
+		    switch (enemyType) {
+		    case 1:
+			    auto _enemy = chaseEnemy::create();
+			    _enemy->setPosition(Vec2(176.5, temp));
+			    _enemy->DoOnCreated(5);
+			    _enemy->DoOnFrame(_player);
+			    this->addChild(_enemy, GROUP_ENEMY);
+			    break;
+		    }
+		    temp += 50;
+	    });
+		auto delay = cocos2d::DelayTime::create(0.000000001);
+	    this->runAction(Repeat::create(static_cast<Spawn *>(Spawn::create(create, delay, nullptr)), num));
+	}
+	
+	roomStat[0] = 1;
 
 	auto door1 = Door::create("CloseNormal.png");
 	door1->setPosition(176.5, 300);
@@ -183,7 +186,7 @@ Stage1::Stage1()
 	door2->DoOnCreate(0);
 	this->addChild(door2, 9999);
 
-	static int num_L1 = cocos2d::random(0,7);
+	static int num_L1 = 3;
 	switch (num_L1)
 	{
 	case 1:
@@ -203,15 +206,21 @@ Stage1::Stage1()
 		}
 		break;
 	case 3:
-		for (int i = 0; i <= 100; i += 33) {
+		for (int i = 0; i <= 140; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(176.5, 200 - i);
+			barrier->setPosition(176.5, 230 - i);
 			barrier->DoOnCreate(num_L1);
 			this->addChild(barrier, 9999);
 		}
-		for (int i = 0; i <= 100; i += 33) {
+		for (int i = 0; i <= 50; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(120 + i, 160.5);
+			barrier->setPosition(110 + i, 165);
+			barrier->DoOnCreate(num_L1);
+			this->addChild(barrier, 9999);
+		}
+		for (int i = 0; i <= 50; i += 33) {
+			auto barrier = Barriers::create("change.jpg");
+			barrier->setPosition(240 - i, 165);
 			barrier->DoOnCreate(num_L1);
 			this->addChild(barrier, 9999);
 		}
@@ -225,7 +234,7 @@ Stage1::Stage1()
 		}
 		for (int i = 0; i <= 100; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(120 + i, 200);
+			barrier->setPosition(120 + i, 220);
 			barrier->DoOnCreate(num_L1);
 			this->addChild(barrier, 9999);
 		}
@@ -239,7 +248,7 @@ Stage1::Stage1()
 		}
 		for (int i = 0; i <= 100; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(200, 200 - i);
+			barrier->setPosition(240, 200 - i);
 			barrier->DoOnCreate(num_L1);
 			this->addChild(barrier, 9999);
 		}
@@ -250,58 +259,58 @@ Stage1::Stage1()
 		barrier->DoOnCreate(num_L1);
 		this->addChild(barrier, 9999);
 		break;
-	}
+		}
+		/*
+		if (roomStat[0] == 0) {
+			auto _enemy = Sprite::create("monster.png");
+			_enemy->setTag(GROUP_ENEMY);
 
-	if (roomStat[0] == 0) {
-		auto _enemy = Sprite::create("monster.png");
-		_enemy->setTag(GROUP_ENEMY);
+			auto enemybody = PhysicsBody::createCircle(7.0f, PhysicsMaterial(1.0f, 0.0f, 0.0f));
+			enemybody->setContactTestBitmask(1);
+			enemybody->setCollisionBitmask(1);
+			enemybody->setCategoryBitmask(1);
+			enemybody->setTag(GROUP_ENEMY);
+			enemybody->setDynamic(true);
+			enemybody->setGravityEnable(false);
+			_enemy->setPhysicsBody(enemybody);
 
-		auto enemybody = PhysicsBody::createCircle(7.0f, PhysicsMaterial(1.0f, 0.0f, 0.0f));
-		enemybody->setContactTestBitmask(1);
-		enemybody->setCollisionBitmask(1);
-		enemybody->setCategoryBitmask(1);
-		enemybody->setTag(GROUP_ENEMY);
-		enemybody->setDynamic(true);
-		enemybody->setGravityEnable(false);
-		_enemy->setPhysicsBody(enemybody);
+			_enemy->setPosition(Vec2(150, 250));
+			this->addChild(_enemy, GROUP_ENEMY);
 
-		_enemy->setPosition(Vec2(150, 250));
-		this->addChild(_enemy, GROUP_ENEMY);
+			auto shootStar = CallFunc::create([=]() {
+				Bullet *dankumu = Bullet::create("grain.png");
 
-		auto shootStar = CallFunc::create([=]() {
-			Bullet *dankumu = Bullet::create("grain.png");
+				auto physicsBody = PhysicsBody::createCircle(1.0f, PhysicsMaterial(1.0f, 0.0f, 0.0f));
+				physicsBody->setDynamic(false);
+				physicsBody->setContactTestBitmask(0xFFFFFFFF);
+				dankumu->setPhysicsBody(physicsBody);
+				dankumu->setTag(GROUP_ENEMY_BULLET);
+				//屏幕右下角坐标(26.5,0)
+				dankumu->setPosition(_enemy->getPosition());
+				dankumu->setAngle(0);
+				dankumu->aim = true;
+				dankumu->setVelocit(3);
+				dankumu->setRot(0);
+				//dankumu->setRotVelocity(10);
+				dankumu->setAcceleration(0);
+				dankumu->setAccAngle(-90);
+				dankumu->DoOnCreate(_player);
+				dankumu->DoOnFrame();
+				this->addChild(dankumu, GROUP_ENEMY_BULLET);
+				BlendFunc cbl = { backend::BlendFactor::DST_COLOR,backend::BlendFactor::ONE };
+				//dankumu->setBlendFunc(cbl);
 
-			auto physicsBody = PhysicsBody::createCircle(1.0f, PhysicsMaterial(1.0f, 0.0f, 0.0f));
-			physicsBody->setDynamic(false);
-			physicsBody->setContactTestBitmask(0xFFFFFFFF);
-			dankumu->setPhysicsBody(physicsBody);
-			dankumu->setTag(GROUP_ENEMY_BULLET);
-			//屏幕右下角坐标(26.5,0)
-			dankumu->setPosition(_enemy->getPosition());
-			dankumu->setAngle(0);
-			dankumu->aim = true;
-			dankumu->setVelocit(3);
-			dankumu->setRot(0);
-			//dankumu->setRotVelocity(10);
-			dankumu->setAcceleration(0);
-			dankumu->setAccAngle(-90);
-			dankumu->DoOnCreate(_player);
-			dankumu->DoOnFrame();
-			this->addChild(dankumu, GROUP_ENEMY_BULLET);
-			BlendFunc cbl = { backend::BlendFactor::DST_COLOR,backend::BlendFactor::ONE };
-			//dankumu->setBlendFunc(cbl);
-
-			auto p = P_Point::create();
-			p->setPosition(_enemy->getPosition());
-			p->DoOnCreate();
-			p->setScale(1.2f);
-			this->addChild(p, GROUP_ITEM);
-		});
-		auto delay = cocos2d::DelayTime::create(1);
-		_enemy->runAction(RepeatForever::create(static_cast<Spawn *>(Spawn::create(shootStar, delay, nullptr))));
+				auto p = P_Point::create();
+				p->setPosition(_enemy->getPosition());
+				p->DoOnCreate();
+				p->setScale(1.2f);
+				this->addChild(p, GROUP_ITEM);
+			});
+			auto delay = cocos2d::DelayTime::create(1);
+			_enemy->runAction(RepeatForever::create(static_cast<Spawn *>(Spawn::create(shootStar, delay, nullptr))));
 		
-		roomStat[0] = 1;
-	}
+			roomStat[0] = 1;
+		}*/
 	
 
 }
@@ -313,6 +322,17 @@ Scene* Stage2::createScene()
 
 Stage2::Stage2()
 {
+
+	_player = _player->create("player.png");
+	_player->info = info_temp;
+	_player->DoOnCreate();
+	_player->DoOnFrame();
+	_player->setPosition(info_temp.dir);
+	_player->Atk();
+
+
+	this->addChild(_player, GROUP_PLAYER);
+
 
 	auto door1 = Door::create("CloseNormal.png");
 	door1->setPosition(176.5, 300);
@@ -344,15 +364,21 @@ Stage2::Stage2()
 		}
 		break;
 	case 3:
-		for (int i = 0; i <= 100; i += 33) {
+		for (int i = 0; i <= 140; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(176.5, 200 - i);
+			barrier->setPosition(176.5, 230 - i);
 			barrier->DoOnCreate(num_L2);
 			this->addChild(barrier, 9999);
 		}
-		for (int i = 0; i <= 100; i += 33) {
+		for (int i = 0; i <= 50; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(120 + i, 160.5);
+			barrier->setPosition(110 + i, 165);
+			barrier->DoOnCreate(num_L2);
+			this->addChild(barrier, 9999);
+		}
+		for (int i = 0; i <= 50; i += 33) {
+			auto barrier = Barriers::create("change.jpg");
+			barrier->setPosition(240 - i, 165);
 			barrier->DoOnCreate(num_L2);
 			this->addChild(barrier, 9999);
 		}
@@ -366,7 +392,7 @@ Stage2::Stage2()
 		}
 		for (int i = 0; i <= 100; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(120 + i, 200);
+			barrier->setPosition(120 + i, 220);
 			barrier->DoOnCreate(num_L2);
 			this->addChild(barrier, 9999);
 		}
@@ -380,7 +406,7 @@ Stage2::Stage2()
 		}
 		for (int i = 0; i <= 100; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(200, 200 - i);
+			barrier->setPosition(240, 200 - i);
 			barrier->DoOnCreate(num_L2);
 			this->addChild(barrier, 9999);
 		}
@@ -393,6 +419,7 @@ Stage2::Stage2()
 		break;
 	}
 
+	/*
 	if (roomStat[1] == 0) {
 		auto _enemy = Sprite::create("monster.png");
 		_enemy->setTag(GROUP_ENEMY);
@@ -442,7 +469,7 @@ Stage2::Stage2()
 		_enemy->runAction(RepeatForever::create(static_cast<Spawn *>(Spawn::create(shootStar, delay, nullptr))));
 
 		roomStat[1] = 1;
-	}
+	}*/
 
 
 }
@@ -455,6 +482,17 @@ Scene* Stage3::createScene()
 
 Stage3::Stage3()
 {
+
+	_player = _player->create("player.png");
+	_player->info = info_temp;
+	_player->DoOnCreate();
+	_player->DoOnFrame();
+	_player->setPosition(info_temp.dir);
+	_player->Atk();
+
+
+	this->addChild(_player, GROUP_PLAYER);
+
 
 	auto door1 = Door::create("CloseNormal.png");
 	door1->setPosition(176.5, 300);
@@ -486,15 +524,21 @@ Stage3::Stage3()
 		}
 		break;
 	case 3:
-		for (int i = 0; i <= 100; i += 33) {
+		for (int i = 0; i <= 140; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(176.5, 200 - i);
+			barrier->setPosition(176.5, 230 - i);
 			barrier->DoOnCreate(num_L3);
 			this->addChild(barrier, 9999);
 		}
-		for (int i = 0; i <= 100; i += 33) {
+		for (int i = 0; i <= 50; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(120 + i, 160.5);
+			barrier->setPosition(110 + i, 165);
+			barrier->DoOnCreate(num_L3);
+			this->addChild(barrier, 9999);
+		}
+		for (int i = 0; i <= 50; i += 33) {
+			auto barrier = Barriers::create("change.jpg");
+			barrier->setPosition(240 - i, 165);
 			barrier->DoOnCreate(num_L3);
 			this->addChild(barrier, 9999);
 		}
@@ -508,7 +552,7 @@ Stage3::Stage3()
 		}
 		for (int i = 0; i <= 100; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(120 + i, 200);
+			barrier->setPosition(120 + i, 220);
 			barrier->DoOnCreate(num_L3);
 			this->addChild(barrier, 9999);
 		}
@@ -522,7 +566,7 @@ Stage3::Stage3()
 		}
 		for (int i = 0; i <= 100; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(200, 200 - i);
+			barrier->setPosition(240, 200 - i);
 			barrier->DoOnCreate(num_L3);
 			this->addChild(barrier, 9999);
 		}
@@ -534,7 +578,7 @@ Stage3::Stage3()
 		this->addChild(barrier, 9999);
 		break;
 	}
-
+	/*
 	if (roomStat[2] == 0) {
 		auto _enemy = Sprite::create("monster.png");
 		_enemy->setTag(GROUP_ENEMY);
@@ -584,7 +628,7 @@ Stage3::Stage3()
 		_enemy->runAction(RepeatForever::create(static_cast<Spawn *>(Spawn::create(shootStar, delay, nullptr))));
 
 		roomStat[2] = 1;
-	}
+	}*/
 
 
 }
@@ -597,6 +641,17 @@ Scene* Stage4::createScene()
 
 Stage4::Stage4()
 {
+
+	_player = _player->create("player.png");
+	_player->info = info_temp;
+	_player->DoOnCreate();
+	_player->DoOnFrame();
+	_player->setPosition(info_temp.dir);
+	_player->Atk();
+
+
+	this->addChild(_player, GROUP_PLAYER);
+
 
 	auto door1 = Door::create("CloseNormal.png");
 	door1->setPosition(176.5, 300);
@@ -628,15 +683,21 @@ Stage4::Stage4()
 		}
 		break;
 	case 3:
-		for (int i = 0; i <= 100; i += 33) {
+		for (int i = 0; i <= 140; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(176.5, 200 - i);
+			barrier->setPosition(176.5, 230 - i);
 			barrier->DoOnCreate(num_L4);
 			this->addChild(barrier, 9999);
 		}
-		for (int i = 0; i <= 100; i += 33) {
+		for (int i = 0; i <= 50; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(120 + i, 160.5);
+			barrier->setPosition(110 + i, 165);
+			barrier->DoOnCreate(num_L4);
+			this->addChild(barrier, 9999);
+		}
+		for (int i = 0; i <= 50; i += 33) {
+			auto barrier = Barriers::create("change.jpg");
+			barrier->setPosition(240 - i, 165);
 			barrier->DoOnCreate(num_L4);
 			this->addChild(barrier, 9999);
 		}
@@ -650,7 +711,7 @@ Stage4::Stage4()
 		}
 		for (int i = 0; i <= 100; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(120 + i, 200);
+			barrier->setPosition(120 + i, 220);
 			barrier->DoOnCreate(num_L4);
 			this->addChild(barrier, 9999);
 		}
@@ -664,7 +725,7 @@ Stage4::Stage4()
 		}
 		for (int i = 0; i <= 100; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(200, 200 - i);
+			barrier->setPosition(240, 200 - i);
 			barrier->DoOnCreate(num_L4);
 			this->addChild(barrier, 9999);
 		}
@@ -676,7 +737,7 @@ Stage4::Stage4()
 		this->addChild(barrier, 9999);
 		break;
 	}
-
+	/*
 	if (roomStat[3] == 0) {
 		auto _enemy = Sprite::create("monster.png");
 		_enemy->setTag(GROUP_ENEMY);
@@ -726,7 +787,7 @@ Stage4::Stage4()
 		_enemy->runAction(RepeatForever::create(static_cast<Spawn *>(Spawn::create(shootStar, delay, nullptr))));
 
 		roomStat[3] = 1;
-	}
+	}*/
 
 
 }
@@ -739,6 +800,18 @@ Scene* Stage5::createScene()
 
 Stage5::Stage5()
 {
+
+	_player = _player->create("player.png");
+	_player->info = info_temp;
+	_player->DoOnCreate();
+	_player->DoOnFrame();
+	_player->setPosition(info_temp.dir);
+	_player->Atk();
+
+
+	this->addChild(_player, GROUP_PLAYER);
+
+
 
 	auto door1 = Door::create("CloseNormal.png");
 	door1->setPosition(176.5, 300);
@@ -770,15 +843,21 @@ Stage5::Stage5()
 		}
 		break;
 	case 3:
-		for (int i = 0; i <= 100; i += 33) {
+		for (int i = 0; i <= 140; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(176.5, 200 - i);
+			barrier->setPosition(176.5, 230 - i);
 			barrier->DoOnCreate(num_L5);
 			this->addChild(barrier, 9999);
 		}
-		for (int i = 0; i <= 100; i += 33) {
+		for (int i = 0; i <= 50; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(120 + i, 160.5);
+			barrier->setPosition(110 + i, 165);
+			barrier->DoOnCreate(num_L5);
+			this->addChild(barrier, 9999);
+		}
+		for (int i = 0; i <= 50; i += 33) {
+			auto barrier = Barriers::create("change.jpg");
+			barrier->setPosition(240 - i, 165);
 			barrier->DoOnCreate(num_L5);
 			this->addChild(barrier, 9999);
 		}
@@ -792,7 +871,7 @@ Stage5::Stage5()
 		}
 		for (int i = 0; i <= 100; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(120 + i, 200);
+			barrier->setPosition(120 + i, 220);
 			barrier->DoOnCreate(num_L5);
 			this->addChild(barrier, 9999);
 		}
@@ -806,7 +885,7 @@ Stage5::Stage5()
 		}
 		for (int i = 0; i <= 100; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(200, 200 - i);
+			barrier->setPosition(240, 200 - i);
 			barrier->DoOnCreate(num_L5);
 			this->addChild(barrier, 9999);
 		}
@@ -818,7 +897,7 @@ Stage5::Stage5()
 		this->addChild(barrier, 9999);
 		break;
 	}
-
+	/*
 	if (roomStat[4] == 0) {
 		auto _enemy = Sprite::create("monster.png");
 		_enemy->setTag(GROUP_ENEMY);
@@ -868,7 +947,7 @@ Stage5::Stage5()
 		_enemy->runAction(RepeatForever::create(static_cast<Spawn *>(Spawn::create(shootStar, delay, nullptr))));
 
 		roomStat[4] = 1;
-	}
+	}*/
 
 
 }
@@ -880,6 +959,18 @@ Scene* Stage6::createScene()
 
 Stage6::Stage6()
 {
+
+	_player = _player->create("player.png");
+	_player->info = info_temp;
+	_player->DoOnCreate();
+	_player->DoOnFrame();
+	_player->setPosition(info_temp.dir);
+	_player->Atk();
+
+
+	this->addChild(_player, GROUP_PLAYER);
+
+
 
 	auto door1 = Door::create("CloseNormal.png");
 	door1->setPosition(176.5, 300);
@@ -911,15 +1002,21 @@ Stage6::Stage6()
 		}
 		break;
 	case 3:
-		for (int i = 0; i <= 100; i += 33) {
+		for (int i = 0; i <= 140; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(176.5, 200 - i);
+			barrier->setPosition(176.5, 230 - i);
 			barrier->DoOnCreate(num_L6);
 			this->addChild(barrier, 9999);
 		}
-		for (int i = 0; i <= 100; i += 33) {
+		for (int i = 0; i <= 50; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(120 + i, 160.5);
+			barrier->setPosition(110 + i, 165);
+			barrier->DoOnCreate(num_L6);
+			this->addChild(barrier, 9999);
+		}
+		for (int i = 0; i <= 50; i += 33) {
+			auto barrier = Barriers::create("change.jpg");
+			barrier->setPosition(240 - i, 165);
 			barrier->DoOnCreate(num_L6);
 			this->addChild(barrier, 9999);
 		}
@@ -933,7 +1030,7 @@ Stage6::Stage6()
 		}
 		for (int i = 0; i <= 100; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(120 + i, 200);
+			barrier->setPosition(120 + i, 220);
 			barrier->DoOnCreate(num_L6);
 			this->addChild(barrier, 9999);
 		}
@@ -947,7 +1044,7 @@ Stage6::Stage6()
 		}
 		for (int i = 0; i <= 100; i += 33) {
 			auto barrier = Barriers::create("change.jpg");
-			barrier->setPosition(200, 200 - i);
+			barrier->setPosition(240, 200 - i);
 			barrier->DoOnCreate(num_L6);
 			this->addChild(barrier, 9999);
 		}
@@ -959,7 +1056,7 @@ Stage6::Stage6()
 		this->addChild(barrier, 9999);
 		break;
 	}
-
+	/*
 	if (roomStat[5] == 0) {
 		auto _enemy = Sprite::create("monster.png");
 		_enemy->setTag(GROUP_ENEMY);
@@ -1009,7 +1106,7 @@ Stage6::Stage6()
 		_enemy->runAction(RepeatForever::create(static_cast<Spawn *>(Spawn::create(shootStar, delay, nullptr))));
 
 		roomStat[5] = 1;
-	}
+	}*/
 
 
 }
@@ -1051,23 +1148,7 @@ bool Stage::init() {
 	addKeyboardListener();
 	addContactListener();
 
-	_player = _player->create("player.png");
-	_player->DoOnCreate();
-	_player->setPosition(info_temp.dir);
-	_player->Atk(this);
 
-	auto playbody = PhysicsBody::createCircle(1.5f, PhysicsMaterial(1.0f, 0.0f, 0.0f));
-	playbody->setContactTestBitmask(1);
-	playbody->setCollisionBitmask(1);
-	playbody->setCategoryBitmask(1);
-	playbody->setTag(GROUP_PLAYER);
-	playbody->setDynamic(true);
-	playbody->setGravityEnable(false);
-	_player->setPhysicsBody(playbody);
-	_player->info = info_temp;
-	_player->DoOnFrame();
-
-	this->addChild(_player, GROUP_PLAYER);
 
 	std::string str = "Score:  ";
 	str += tostr(_player->getScore());
@@ -1272,23 +1353,27 @@ bool Stage::onConcactBegin(PhysicsContact & contact) {
 			scene = StageOP::createScene();
 			break;
 		case 1:
+			info_temp.dir = Vec2(176.5,70);
 			scene = Stage1::createScene();
-			_player->setPosition(176.5,70);
-			info_temp.dir= _player->getPosition();
 			break;
 		case 2:
+			info_temp.dir = Vec2(176.5, 70);
 			scene = Stage2::createScene();
 			break;
 		case 3:
+			info_temp.dir = Vec2(176.5, 70);
 			scene = Stage3::createScene();
 			break;
 		case 4:
+			info_temp.dir = Vec2(176.5, 70);
 			scene = Stage4::createScene();
 			break;
 		case 5:
+			info_temp.dir = Vec2(176.5, 70);
 			scene = Stage5::createScene();
 			break;
 		case 6:
+			info_temp.dir = Vec2(176.5, 70);
 			scene = Stage6::createScene();
 			break;
 		default:
