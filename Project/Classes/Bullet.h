@@ -44,10 +44,10 @@ protected:
 	float velocity = 0;//子弹速度，单位：像素/帧
 	float vMax = 9999;//子弹最大速度，单位：像素/帧
 	float angle = 0;//子弹角度，以弧度存储
-	float rot = 0;//子弹朝向，单位：以弧度存储
-	float rotvelocity = 0;//子弹朝向的旋转速度，单位：以弧度存储
+	float rot = 0;//子弹朝向，以弧度存储
+	float rotvelocity = 0;//子弹朝向的旋转速度，以角度度存储
 	float a = 0;//子弹加速度
-	float ar = 0;//子弹加速度的角度，单位：以弧度存储
+	float ar = 0;//子弹加速度的角度，以角度存储
 	int timer = 0;//子弹的内置计时器
 	float dmg = 1;//子弹伤害
 	int temp1 = 0;
